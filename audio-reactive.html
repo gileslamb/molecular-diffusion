@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marine Audio-Reactive Visual System</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#000a1a;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#88ccdd}
+canvas#main-canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
+
+/* ── UI Panel (left) ── */
+#ui-panel{
+  position:fixed;top:16px;left:16px;width:272px;
+  background:rgba(0,12,24,0.88);border:1px solid rgba(50,150,180,0.18);
+  border-radius:14px;padding:18px;backdrop-filter:blur(14px);
+  z-index:100;max-height:calc(100vh - 32px);overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(50,150,180,0.3) transparent;
+}
+#ui-panel::-webkit-scrollbar{width:4px}
+#ui-panel::-webkit-scrollbar-thumb{background:rgba(50,150,180,0.3);border-radius:2px}
+
+#ui-panel h2{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:#55aacc;margin-bottom:14px;font-weight:500}
+.section{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(50,150,180,0.1)}
+.section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.section-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#447788;margin-bottom:8px;font-weight:600}
+
+/* Radio buttons */
+.radio-group label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12px;color:#88bbcc;transition:color .2s}
+.radio-group label:hover{color:#aaddee}
+.radio-group input[type="radio"]{accent-color:#33aacc;width:14px;height:14px}
+
+/* Buttons */
+.btn{
+  display:block;width:100%;padding:9px 14px;border:1px solid rgba(50,180,200,0.3);
+  border-radius:8px;background:rgba(0,60,80,0.3);color:#66ccdd;font-size:12px;
+  cursor:pointer;transition:all .25s;text-align:center;font-family:inherit;letter-spacing:.5px
+}
+.btn:hover{background:rgba(0,80,110,0.45);border-color:rgba(50,180,200,0.5);color:#88eeff}
+.btn.active{background:rgba(0,180,200,0.2);border-color:rgba(50,220,240,0.5);color:#aaffff}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn-row{display:flex;gap:6px}
+.btn-row .btn{flex:1;padding:7px 6px;font-size:11px}
+
+#file-upload-area{display:none;margin-top:8px}
+#audio-file{display:none}
+#file-label{display:block;padding:8px;border:1px dashed rgba(50,150,180,0.25);border-radius:8px;text-align:center;font-size:11px;color:#557788;cursor:pointer}
+#file-label:hover{border-color:rgba(50,180,200,0.45);color:#88bbcc}
+#file-name{font-size:10px;color:#447766;margin-top:4px;text-align:center;min-height:14px}
+
+/* ── VU METER ── */
+#vu-section{margin-top:10px}
+#vu-canvas{width:100%;height:48px;border-radius:6px;background:rgba(0,20,35,0.6);border:1px solid rgba(50,150,180,0.12);display:block}
+#vu-label-row{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+#vu-status{font-size:10px;color:#447766;text-transform:uppercase;letter-spacing:1px}
+#vu-db{font-size:11px;color:#55cc99;font-variant-numeric:tabular-nums;font-weight:600}
+#vu-peak-bar{width:100%;height:6px;background:rgba(0,20,35,0.6);border-radius:3px;margin-top:4px;overflow:hidden;border:1px solid rgba(50,150,180,0.08)}
+#vu-peak-fill{height:100%;width:0%;border-radius:3px;transition:width 60ms linear;
+  background:linear-gradient(90deg, #114433 0%, #22aa66 40%, #44dd88 65%, #aaff44 82%, #ffaa22 92%, #ff4422 100%)}
+
+/* Sliders */
+.slider-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.slider-label{font-size:11px;color:#668899;flex:0 0 auto}
+.slider-val{font-size:10px;color:#55aa99;width:36px;text-align:right;font-variant-numeric:tabular-nums}
+input[type="range"]{
+  flex:1;margin:0 8px;height:3px;-webkit-appearance:none;appearance:none;
+  background:rgba(50,150,180,0.15);border-radius:2px;outline:none
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+  background:#33aacc;cursor:pointer;border:none;box-shadow:0 0 6px rgba(50,180,220,0.4)
+}
+
+/* Checkbox */
+.check-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.check-row input{accent-color:#33aacc}
+.check-row label{font-size:11px;color:#668899;cursor:pointer}
+
+/* Dropdown */
+select{
+  width:100%;padding:6px 10px;background:rgba(0,30,50,0.6);border:1px solid rgba(50,150,180,0.2);
+  border-radius:6px;color:#88ccdd;font-size:11px;font-family:inherit;outline:none;cursor:pointer
+}
+select option{background:#001a2a;color:#88ccdd}
+
+/* ── Metrics Panel (right) ── */
+#metrics-panel{
+  position:fixed;top:16px;right:16px;width:210px;
+  background:rgba(0,12,24,0.82);border:1px solid rgba(50,150,180,0.12);
+  border-radius:14px;padding:16px;backdrop-filter:blur(14px);z-index:100
+}
+#metrics-panel h3{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#447788;margin-bottom:10px;font-weight:600}
+.metric{margin-bottom:8px}
+.metric-header{display:flex;justify-content:space-between;margin-bottom:3px}
+.metric-name{font-size:10px;color:#557788;text-transform:uppercase;letter-spacing:1px}
+.metric-value{font-size:10px;color:#55cc99;font-variant-numeric:tabular-nums}
+.metric-bar{height:4px;background:rgba(50,150,180,0.1);border-radius:2px;overflow:hidden}
+.metric-fill{height:100%;border-radius:2px;transition:width 80ms ease-out;min-width:0}
+.m-tempo .metric-fill{background:linear-gradient(90deg,#2266aa,#44aadd)}
+.m-bright .metric-fill{background:linear-gradient(90deg,#226688,#66eeff)}
+.m-dynamics .metric-fill{background:linear-gradient(90deg,#226644,#44dd88)}
+.m-turb .metric-fill{background:linear-gradient(90deg,#664422,#ddaa44)}
+.m-density .metric-fill{background:linear-gradient(90deg,#442266,#aa44dd)}
+.m-complex .metric-fill{background:linear-gradient(90deg,#662244,#dd4488)}
+
+/* ── Preset description ── */
+#preset-desc{font-size:10px;color:#446677;margin-top:6px;line-height:1.4;min-height:28px;transition:opacity .3s}
+
+/* ── FPS counter ── */
+#fps{position:fixed;bottom:16px;right:16px;font-size:10px;color:rgba(80,160,200,0.35);z-index:100;font-variant-numeric:tabular-nums}
+
+/* ── Instructions overlay ── */
+#instructions{
+  position:fixed;bottom:40px;left:50%;transform:translateX(-50%);
+  background:rgba(0,12,24,0.75);border:1px solid rgba(50,150,180,0.15);
+  border-radius:10px;padding:12px 24px;backdrop-filter:blur(10px);z-index:100;
+  font-size:12px;color:#668899;text-align:center;letter-spacing:.3px;
+  transition:opacity .5s;pointer-events:none
+}
+
+/* ── Status messages ── */
+#status{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  font-size:11px;color:#44aa88;z-index:100;text-align:center;
+  opacity:0;transition:opacity .4s;pointer-events:none
+}
+#status.visible{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ─── UI Panel ─── -->
+<div id="ui-panel">
+  <h2>Marine Audio System</h2>
+
+  <!-- Audio Source -->
+  <div class="section">
+    <div class="section-title">Audio Source</div>
+    <div class="radio-group">
+      <label><input type="radio" name="source" value="mic" checked> Microphone Input</label>
+      <label><input type="radio" name="source" value="file"> Audio File Upload</label>
+      <label><input type="radio" name="source" value="system"> System Audio</label>
+    </div>
+    <div id="file-upload-area">
+      <label id="file-label" for="audio-file">Drop or click to select audio file</label>
+      <input type="file" id="audio-file" accept="audio/*">
+      <div id="file-name"></div>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn" id="btn-start">Start Audio Analysis</button>
+    </div>
+    <!-- VU Meter -->
+    <div id="vu-section">
+      <canvas id="vu-canvas" width="472" height="96"></canvas>
+      <div id="vu-peak-bar"><div id="vu-peak-fill"></div></div>
+      <div id="vu-label-row">
+        <span id="vu-status">No Input</span>
+        <span id="vu-db">-∞ dB</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Presets -->
+  <div class="section">
+    <div class="section-title">Mapping Presets</div>
+    <div class="btn-row">
+      <button class="btn active" data-preset="expressive">Expressive</button>
+      <button class="btn" data-preset="rhythmic">Rhythmic</button>
+      <button class="btn" data-preset="harmonic">Harmonic</button>
+    </div>
+    <div id="preset-desc">Dynamics &amp; timbral changes drive particle expansion, glow intensity, and turbulence.</div>
+  </div>
+
+  <!-- Visual Controls -->
+  <div class="section">
+    <div class="section-title">Visual Controls</div>
+
+    <div class="slider-row">
+      <span class="slider-label">Shoals</span>
+      <input type="range" id="sl-shoals" min="1" max="5" value="2" step="1">
+      <span class="slider-val" id="val-shoals">2</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Particles / Shoal</span>
+      <input type="range" id="sl-particles" min="100" max="2000" value="500" step="50">
+      <span class="slider-val" id="val-particles">500</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Whales</span>
+      <input type="range" id="sl-whales" min="1" max="3" value="2" step="1">
+      <span class="slider-val" id="val-whales">2</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Sensitivity</span>
+      <input type="range" id="sl-sensitivity" min="0.2" max="5" value="1.5" step="0.1">
+      <span class="slider-val" id="val-sensitivity">1.5</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Bloom</span>
+      <input type="range" id="sl-bloom" min="0" max="4" value="1.4" step="0.1">
+      <span class="slider-val" id="val-bloom">1.4</span>
+    </div>
+
+    <div style="margin-bottom:8px">
+      <div class="slider-label" style="margin-bottom:4px">Color Scheme</div>
+      <select id="sel-color">
+        <option value="abyssal">Abyssal — Cyan &amp; Deep Blue</option>
+        <option value="coral">Coral — Warm Amber &amp; Pink</option>
+        <option value="polar">Polar — Ice White &amp; Silver</option>
+      </select>
+    </div>
+
+    <div class="check-row">
+      <input type="checkbox" id="chk-autorotate" checked>
+      <label for="chk-autorotate">Camera Auto-Rotate</label>
+    </div>
+    <div class="check-row">
+      <input type="checkbox" id="chk-godrays" checked>
+      <label for="chk-godrays">God Rays</label>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Metrics Panel ─── -->
+<div id="metrics-panel">
+  <h3>Audio Features</h3>
+  <div class="metric m-tempo">
+    <div class="metric-header"><span class="metric-name">Tempo</span><span class="metric-value" id="mv-tempo">— BPM</span></div>
+    <div class="metric-bar"><div class="metric-fill" id="mf-tempo" style="width:0%"></div></div>
+  </div>
+  <div class="metric m-bright">
+    <div class="metric-header"><span class="metric-name">Brightness</span><span class="metric-value" id="mv-bright">0.00</span></div>
+    <div class="metric-bar"><div class="metric-fill" id="mf-bright" style="width:0%"></div></div>
+  </div>
+  <div class="metric m-dynamics">
+    <div class="metric-header"><span class="metric-name">Dynamics</span><span class="metric-value" id="mv-dynamics">0.00</span></div>
+    <div class="metric-bar"><div class="metric-fill" id="mf-dynamics" style="width:0%"></div></div>
+  </div>
+  <div class="metric m-turb">
+    <div class="metric-header"><span class="metric-name">Turbulence</span><span class="metric-value" id="mv-turb">0.00</span></div>
+    <div class="metric-bar"><div class="metric-fill" id="mf-turb" style="width:0%"></div></div>
+  </div>
+  <div class="metric m-density">
+    <div class="metric-header"><span class="metric-name">Density</span><span class="metric-value" id="mv-density">0.00</span></div>
+    <div class="metric-bar"><div class="metric-fill" id="mf-density" style="width:0%"></div></div>
+  </div>
+  <div class="metric m-complex">
+    <div class="metric-header"><span class="metric-name">Complexity</span><span class="metric-value" id="mv-complex">0.00</span></div>
+    <div class="metric-bar"><div class="metric-fill" id="mf-complex" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div id="fps">-- fps</div>
+<div id="instructions">Select an audio source and press <strong style="color:#66ccdd">Start</strong> to begin — the scene responds to live audio</div>
+<div id="status"></div>
+
+<!-- ─── Three.js import map ─── -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<!-- ─── Meyda (optional, graceful fallback) ─── -->
+<script src="https://unpkg.com/meyda@5.6.3/dist/web/meyda.min.js" onerror="window.__meydaFailed=true"></script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN APPLICATION MODULE
+     ═══════════════════════════════════════════════════════════ -->
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+/* ================================================================
+   1. CONFIGURATION & CONSTANTS
+   ================================================================ */
+const COLOR_SCHEMES = {
+  abyssal: {
+    shoalColors: [
+      new THREE.Color(0x00ddff),
+      new THREE.Color(0x6699ff),
+      new THREE.Color(0x00ffaa),
+      new THREE.Color(0xccddff),
+      new THREE.Color(0x9966ff),
+    ],
+    whaleCore:  new THREE.Color(0x0a1a2a),
+    whaleGlow:  new THREE.Color(0xff8844),
+    ambient:    new THREE.Color(0x3388aa),
+    background: new THREE.Color(0x000a1a),
+    fogNear:    new THREE.Color(0x001a33),
+    fogFar:     new THREE.Color(0x000a1a),
+    godRay:     new THREE.Color(0xaaddff),
+  },
+  coral: {
+    shoalColors: [
+      new THREE.Color(0xff6644),
+      new THREE.Color(0xffaa33),
+      new THREE.Color(0xff4488),
+      new THREE.Color(0xffcc66),
+      new THREE.Color(0xff8866),
+    ],
+    whaleCore:  new THREE.Color(0x1a0a0a),
+    whaleGlow:  new THREE.Color(0xff4422),
+    ambient:    new THREE.Color(0xaa5533),
+    background: new THREE.Color(0x0a0505),
+    fogNear:    new THREE.Color(0x1a0808),
+    fogFar:     new THREE.Color(0x0a0505),
+    godRay:     new THREE.Color(0xffccaa),
+  },
+  polar: {
+    shoalColors: [
+      new THREE.Color(0xddeeff),
+      new THREE.Color(0xaaccee),
+      new THREE.Color(0xffffff),
+      new THREE.Color(0xbbddff),
+      new THREE.Color(0x99bbdd),
+    ],
+    whaleCore:  new THREE.Color(0x0a1520),
+    whaleGlow:  new THREE.Color(0x88ccff),
+    ambient:    new THREE.Color(0x667788),
+    background: new THREE.Color(0x040810),
+    fogNear:    new THREE.Color(0x0a1520),
+    fogFar:     new THREE.Color(0x040810),
+    godRay:     new THREE.Color(0xddeeff),
+  },
+};
+
+/* ── PRESETS: dramatically different mapping weights ──
+   Each value is a multiplier for that audio feature's influence.
+   Higher = that feature dominates the visual response.
+*/
+const PRESETS = {
+  expressive: {
+    dynamics: 3.5,    // loudness drives everything
+    turbulence: 3.0,  // timbral change → chaos
+    tempo: 0.5,       // tempo is secondary
+    density: 0.6,
+    brightness: 1.2,
+    complexity: 0.6,
+    desc: 'Dynamics & timbral changes drive particle expansion, glow intensity, and turbulence.',
+  },
+  rhythmic: {
+    dynamics: 1.0,
+    turbulence: 0.4,
+    tempo: 3.5,       // tempo drives speed
+    density: 3.5,     // rhythmic density = particle count
+    brightness: 0.6,
+    complexity: 0.4,
+    desc: 'Beat tempo controls swimming speed. Rhythmic density spawns particles on each onset.',
+  },
+  harmonic: {
+    dynamics: 0.6,
+    turbulence: 0.8,
+    tempo: 0.6,
+    density: 0.5,
+    brightness: 3.5,  // spectral centroid → colour/brightness
+    complexity: 3.5,  // harmonic spread → shoal clustering
+    desc: 'Pitch height shifts colour temperature. Harmonic richness disperses or clusters shoals.',
+  },
+};
+
+let currentPreset = { ...PRESETS.expressive };
+let currentScheme = 'abyssal';
+let sensitivity = 1.5;
+
+/* ================================================================
+   2. SHADERS
+   ================================================================ */
+const VignetteShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    darkness: { value: 0.65 },
+    offset:   { value: 0.4 },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+  `,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float darkness;
+    uniform float offset;
+    varying vec2 vUv;
+    void main(){
+      vec4 c = texture2D(tDiffuse, vUv);
+      float d = distance(vUv, vec2(0.5));
+      float v = smoothstep(offset, offset+0.65, d) * darkness;
+      c.rgb = mix(c.rgb, vec3(0.0, 0.015, 0.04), v);
+      gl_FragColor = c;
+    }
+  `,
+};
+
+const WhaleGlowVert = `
+  varying vec3 vNormal;
+  varying vec3 vWorldPos;
+  void main(){
+    vNormal = normalize(normalMatrix * normal);
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vWorldPos = wp.xyz;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }
+`;
+const WhaleGlowFrag = `
+  uniform vec3 uColor;
+  uniform float uBreath;
+  uniform float uStrength;
+  uniform float uTime;
+  varying vec3 vNormal;
+  varying vec3 vWorldPos;
+  void main(){
+    vec3 viewDir = normalize(cameraPosition - vWorldPos);
+    float fresnel = 1.0 - abs(dot(vNormal, viewDir));
+    float rim = pow(fresnel, 1.8);
+    float center = pow(1.0 - fresnel, 0.5) * 0.35;
+    float glow = (rim * 0.65 + center) * uStrength;
+    glow *= 0.65 + 0.35 * sin(uBreath);
+    float shimmer = sin(vWorldPos.x*3.0+uTime*0.7)*sin(vWorldPos.y*2.5+uTime*0.5)*sin(vWorldPos.z*2.8+uTime*0.6);
+    glow *= 0.85 + 0.15 * shimmer;
+    gl_FragColor = vec4(uColor * glow * 2.2, glow * 0.55);
+  }
+`;
+
+const GodRayVert = `
+  varying vec2 vUv;
+  void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+`;
+const GodRayFrag = `
+  uniform vec3 uColor;
+  uniform float uOpacity;
+  uniform float uTime;
+  varying vec2 vUv;
+  void main(){
+    float fade = smoothstep(0.0, 0.3, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
+    float edge = smoothstep(0.0, 0.3, vUv.x) * smoothstep(1.0, 0.7, vUv.x);
+    float flicker = 0.85 + 0.15 * sin(uTime * 0.3 + vUv.y * 4.0);
+    float a = fade * edge * uOpacity * flicker;
+    gl_FragColor = vec4(uColor, a * 0.15);
+  }
+`;
+
+/* ================================================================
+   3. SPATIAL GRID — O(n) neighbor queries for boid flocking
+   ================================================================ */
+class SpatialGrid {
+  constructor(cellSize) {
+    this.cellSize = cellSize;
+    this.inv = 1 / cellSize;
+    this.cells = new Map();
+  }
+  clear() { this.cells.clear(); }
+  _key(x, y, z) {
+    return ((x * 92837111) ^ (y * 689287499) ^ (z * 283923481)) | 0;
+  }
+  insert(px, py, pz, idx) {
+    const cx = Math.floor(px * this.inv);
+    const cy = Math.floor(py * this.inv);
+    const cz = Math.floor(pz * this.inv);
+    const k = this._key(cx, cy, cz);
+    let arr = this.cells.get(k);
+    if (!arr) { arr = []; this.cells.set(k, arr); }
+    arr.push(idx);
+  }
+  query(px, py, pz, results) {
+    results.length = 0;
+    const cx = Math.floor(px * this.inv);
+    const cy = Math.floor(py * this.inv);
+    const cz = Math.floor(pz * this.inv);
+    for (let dx = -1; dx <= 1; dx++)
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dz = -1; dz <= 1; dz++) {
+          const arr = this.cells.get(this._key(cx+dx, cy+dy, cz+dz));
+          if (arr) for (let i = 0; i < arr.length; i++) results.push(arr[i]);
+        }
+  }
+}
+
+/* ================================================================
+   4. AUDIO ANALYZER — COMPLETELY REWORKED for responsiveness
+   Key fixes:
+   - AnalyserNode smoothingTimeConstant lowered to 0.4
+   - Adaptive normalizer decays fast (0.993) so it tracks current dynamics
+   - Feature smoothing is fast (0.25–0.4) for snappy response
+   - Raw RMS and waveform exposed for VU meter
+   - Onset density bug fixed (only counts actual onsets)
+   ================================================================ */
+class AudioAnalyzer {
+  constructor() {
+    this.ctx = null;
+    this.analyser = null;
+    this.source = null;
+    this._stream = null;  // store MediaStream directly for reliable cleanup
+    this.running = false;
+
+    this.freqData = null;
+    this.timeData = null;
+    this.prevFreq = null;
+
+    // Smoothed 0–1 features
+    this.features = {
+      tempo: 0, brightness: 0.5, dynamics: 0,
+      turbulence: 0, density: 0, complexity: 0.3,
+    };
+    this.rawBPM = 120;
+
+    // Raw values for VU meter
+    this.rawRMS = 0;
+    this.rawDB = -Infinity;
+    this.peakDB = -60;
+
+    // Per-feature adaptive smoothers
+    this._sm = {};
+    ['brightness','dynamics','turbulence','density','complexity'].forEach(k => {
+      this._sm[k] = { value: 0, max: 0.01, min: 0 };
+    });
+
+    // Onset / BPM
+    this._energyHist = [];
+    this._onsetTimes = [];
+    this._onsetCooldown = 0;
+    this._recentOnsets = [];
+
+    this.audioEl = null;
+  }
+
+  async init(mode) {
+    this.stop();
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // CRITICAL: Resume context — browsers start it suspended.
+      // File mode gets away with this because audioEl.play() implicitly resumes,
+      // but mic/system modes produce silence without an explicit resume.
+      if (this.ctx.state === 'suspended') {
+        await this.ctx.resume();
+      }
+      console.log('[Audio] Context state after resume:', this.ctx.state, '| Sample rate:', this.ctx.sampleRate);
+
+      this.analyser = this.ctx.createAnalyser();
+      this.analyser.fftSize = 2048;
+      this.analyser.smoothingTimeConstant = 0.4;
+      this.analyser.minDecibels = -90;
+      this.analyser.maxDecibels = -10;
+
+      const bufLen = this.analyser.frequencyBinCount;
+      this.freqData = new Uint8Array(bufLen);
+      this.timeData = new Uint8Array(this.analyser.fftSize);
+      this.prevFreq = new Float32Array(bufLen);
+
+      if (mode === 'mic') {
+        // Try with processing disabled first (best for instruments),
+        // fall back to basic { audio: true } if constraints not supported
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false,
+            }
+          });
+        } catch (constraintErr) {
+          console.warn('[Audio] Advanced constraints failed, trying basic:', constraintErr);
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
+        this._stream = stream;
+        this.source = this.ctx.createMediaStreamSource(stream);
+        this.source.connect(this.analyser);
+        console.log('[Audio] Mic connected — tracks:', stream.getAudioTracks().map(t => t.label));
+
+      } else if (mode === 'file') {
+        if (!this.audioEl) throw new Error('No audio file selected');
+        this.source = this.ctx.createMediaElementSource(this.audioEl);
+        this.source.connect(this.analyser);
+        this.analyser.connect(this.ctx.destination);
+        this.audioEl.play();
+
+      } else if (mode === 'system') {
+        // getDisplayMedia requires video:true on most browsers;
+        // we keep the video track alive (some browsers kill audio if video stops)
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true,
+        });
+        this._stream = stream;
+        this.source = this.ctx.createMediaStreamSource(stream);
+        this.source.connect(this.analyser);
+
+        // If no audio track was shared, warn the user
+        if (stream.getAudioTracks().length === 0) {
+          showStatus('No audio track — make sure to check "Share audio" in the dialog', true);
+        } else {
+          console.log('[Audio] System audio connected — tracks:', stream.getAudioTracks().map(t => t.label));
+        }
+      }
+
+      // Double-check context is running
+      if (this.ctx.state !== 'running') {
+        await this.ctx.resume();
+        console.log('[Audio] Second resume attempt, state:', this.ctx.state);
+      }
+
+      this.running = true;
+      Object.values(this._sm).forEach(s => { s.value = 0; s.max = 0.01; s.min = 0; });
+      this._energyHist = [];
+      this._onsetTimes = [];
+      this._recentOnsets = [];
+      this.rawBPM = 120;
+      return true;
+    } catch(e) {
+      console.error('[Audio] Init failed:', e);
+      showStatus(e.message || 'Audio initialization failed', true);
+      return false;
+    }
+  }
+
+  stop() {
+    if (this.audioEl) { this.audioEl.pause(); }
+    // Stop all tracks on the stored stream (mic / system)
+    if (this._stream) {
+      this._stream.getTracks().forEach(t => t.stop());
+      this._stream = null;
+    }
+    if (this.source) {
+      try { this.source.disconnect(); } catch(e){}
+      this.source = null;
+    }
+    if (this.ctx && this.ctx.state !== 'closed') { try { this.ctx.close(); } catch(e){} }
+    this.ctx = null; this.analyser = null; this.running = false;
+    this.rawRMS = 0; this.rawDB = -Infinity;
+  }
+
+  setAudioElement(el) { this.audioEl = el; }
+
+  /* Fast adaptive normalizer with quick decay */
+  _smooth(key, raw, speed = 0.3) {
+    const s = this._sm[key];
+    // Max decays toward current value quickly so sensitivity stays high
+    s.max = Math.max(s.max * 0.993, Math.abs(raw) + 0.001);
+    s.min = s.min * 0.998; // min slowly drifts toward 0
+    const range = s.max - s.min;
+    const norm = range > 0.001 ? Math.min(1, Math.max(0, (Math.abs(raw) - s.min) / range)) : 0;
+    // Asymmetric smoothing: attack fast, release slower
+    const alpha = norm > s.value ? speed * 1.5 : speed * 0.5;
+    s.value += (norm - s.value) * alpha;
+    return s.value;
+  }
+
+  update(timestamp) {
+    if (!this.running || !this.analyser) return;
+    this.analyser.getByteFrequencyData(this.freqData);
+    this.analyser.getByteTimeDomainData(this.timeData);
+
+    const freq = this.freqData;
+    const time = this.timeData;
+    const N = freq.length;
+    const sr = this.ctx.sampleRate;
+
+    // ── RMS ──
+    let rmsSum = 0;
+    for (let i = 0; i < time.length; i++) {
+      const v = (time[i] - 128) / 128;
+      rmsSum += v * v;
+    }
+    const rms = Math.sqrt(rmsSum / time.length);
+    this.rawRMS = rms;
+    this.rawDB = rms > 0 ? 20 * Math.log10(rms) : -90;
+    this.peakDB = Math.max(this.peakDB * 0.995, this.rawDB);
+
+    // ── Spectral Centroid ──
+    let wSum = 0, fSum = 0;
+    for (let i = 0; i < N; i++) {
+      wSum += freq[i] * i;
+      fSum += freq[i];
+    }
+    const centroid = fSum > 0 ? (wSum / fSum) * (sr / 2 / N) : 0;
+
+    // ── Spectral Flux (half-wave rectified diff) ──
+    let flux = 0;
+    for (let i = 0; i < N; i++) {
+      const d = freq[i] - this.prevFreq[i];
+      if (d > 0) flux += d;
+      this.prevFreq[i] = freq[i];
+    }
+
+    // ── Spectral Spread ──
+    const meanBin = fSum > 0 ? wSum / fSum : N / 2;
+    let spreadSum = 0;
+    for (let i = 0; i < N; i++) {
+      const diff = i - meanBin;
+      spreadSum += freq[i] * diff * diff;
+    }
+    const spread = fSum > 0 ? Math.sqrt(spreadSum / fSum) : 0;
+
+    // ── Onset Detection & BPM ──
+    this._energyHist.push(rms);
+    if (this._energyHist.length > 30) this._energyHist.shift(); // ~0.5s window at 60fps
+
+    if (this._onsetCooldown > 0) this._onsetCooldown--;
+
+    let isOnset = false;
+    if (this._energyHist.length >= 6) {
+      const avg = this._energyHist.reduce((a,b) => a+b, 0) / this._energyHist.length;
+      if (rms > avg * 1.5 + 0.01 && this._onsetCooldown === 0) {
+        isOnset = true;
+        this._onsetCooldown = 5;
+        this._onsetTimes.push(timestamp);
+        // BPM: keep 8s window of onsets
+        const cutoff = timestamp - 8000;
+        this._onsetTimes = this._onsetTimes.filter(t => t > cutoff);
+        if (this._onsetTimes.length >= 3) {
+          const intervals = [];
+          for (let i = 1; i < this._onsetTimes.length; i++) {
+            intervals.push(this._onsetTimes[i] - this._onsetTimes[i-1]);
+          }
+          intervals.sort((a,b) => a - b);
+          const median = intervals[Math.floor(intervals.length / 2)];
+          if (median > 150 && median < 3000) {
+            this.rawBPM = this.rawBPM * 0.8 + (60000 / median) * 0.2;
+          }
+        }
+      }
+    }
+
+    // ── Onset density: count ACTUAL onsets in 3s window (BUG FIX) ──
+    if (isOnset) this._recentOnsets.push(timestamp);
+    const densityCutoff = timestamp - 3000;
+    this._recentOnsets = this._recentOnsets.filter(t => t > densityCutoff);
+    const onsetDensity = this._recentOnsets.length / 3; // onsets per second
+
+    // ── Store smoothed features ──
+    // Fast attack/release for responsive feel
+    this.features.dynamics   = this._smooth('dynamics',   rms,             0.4);
+    this.features.brightness = this._smooth('brightness', centroid / 3000, 0.3);
+    this.features.turbulence = this._smooth('turbulence', flux / 500,      0.35);
+    this.features.complexity = this._smooth('complexity', spread / 150,    0.2);
+    this.features.density    = this._smooth('density',    onsetDensity / 4, 0.3);
+    this.features.tempo      = Math.max(40, Math.min(220, this.rawBPM));
+  }
+
+  getFeatures() { return this.features; }
+
+  /* Draw waveform onto the VU canvas */
+  drawVU(vuCtx, w, h) {
+    vuCtx.clearRect(0, 0, w, h);
+
+    if (!this.running || !this.timeData) {
+      // No-signal pattern
+      vuCtx.strokeStyle = 'rgba(50,120,150,0.2)';
+      vuCtx.lineWidth = 1;
+      vuCtx.beginPath();
+      vuCtx.moveTo(0, h/2);
+      vuCtx.lineTo(w, h/2);
+      vuCtx.stroke();
+      return;
+    }
+
+    const data = this.timeData;
+    const len = data.length;
+    const step = Math.ceil(len / w);
+
+    // Waveform fill (gradient based on level)
+    const level = Math.min(1, this.rawRMS * 4);
+    const r = Math.floor(30 + level * 200);
+    const g = Math.floor(180 - level * 80);
+    const b = Math.floor(200 - level * 100);
+
+    // Glow underneath
+    const gradient = vuCtx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, `rgba(${r},${g},${b},0.0)`);
+    gradient.addColorStop(0.5, `rgba(${r},${g},${b},${0.15 + level * 0.35})`);
+    gradient.addColorStop(1, `rgba(${r},${g},${b},0.0)`);
+
+    vuCtx.fillStyle = gradient;
+    vuCtx.beginPath();
+    vuCtx.moveTo(0, h/2);
+    for (let x = 0; x < w; x++) {
+      const idx = Math.min(len - 1, x * step);
+      const v = (data[idx] - 128) / 128;
+      vuCtx.lineTo(x, h/2 - v * h * 0.45);
+    }
+    vuCtx.lineTo(w, h/2);
+    for (let x = w - 1; x >= 0; x--) {
+      const idx = Math.min(len - 1, x * step);
+      const v = (data[idx] - 128) / 128;
+      vuCtx.lineTo(x, h/2 + v * h * 0.45 * 0.3);
+    }
+    vuCtx.closePath();
+    vuCtx.fill();
+
+    // Waveform line
+    vuCtx.strokeStyle = `rgba(${r},${g},${b},${0.6 + level * 0.4})`;
+    vuCtx.lineWidth = 1.5 + level;
+    vuCtx.beginPath();
+    for (let x = 0; x < w; x++) {
+      const idx = Math.min(len - 1, x * step);
+      const v = (data[idx] - 128) / 128;
+      const y = h/2 - v * h * 0.45;
+      x === 0 ? vuCtx.moveTo(x, y) : vuCtx.lineTo(x, y);
+    }
+    vuCtx.stroke();
+  }
+}
+
+/* ================================================================
+   5. SHOAL — Boid flocking with AMPLIFIED audio reactivity
+   ================================================================ */
+class Shoal {
+  constructor(count, colorIndex, scene) {
+    this.maxCount = count;
+    this.activeCount = count;
+    this.colorIndex = colorIndex;
+    this.scene = scene;
+    this.baseColor = new THREE.Color();
+
+    this.px = new Float32Array(count);
+    this.py = new Float32Array(count);
+    this.pz = new Float32Array(count);
+    this.vx = new Float32Array(count);
+    this.vy = new Float32Array(count);
+    this.vz = new Float32Array(count);
+
+    this.perceptionRadius = 3.5;
+    this.maxSpeed = 2.5;
+    this.maxForce = 0.8;
+    this.separationWeight = 1.6;
+    this.alignmentWeight = 1.0;
+    this.cohesionWeight = 1.0;
+    this.avoidanceWeight = 4.0;
+    this.turbulenceWeight = 0.5;
+    this.bounds = 22;
+
+    this.grid = new SpatialGrid(this.perceptionRadius);
+    this._neighbors = [];
+
+    const cx = (Math.random() - 0.5) * 16;
+    const cy = (Math.random() - 0.5) * 8;
+    const cz = (Math.random() - 0.5) * 16;
+    for (let i = 0; i < count; i++) {
+      this.px[i] = cx + (Math.random() - 0.5) * 8;
+      this.py[i] = cy + (Math.random() - 0.5) * 8;
+      this.pz[i] = cz + (Math.random() - 0.5) * 8;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.5 + Math.random() * 0.5;
+      this.vx[i] = Math.cos(angle) * speed;
+      this.vy[i] = (Math.random() - 0.5) * 0.5;
+      this.vz[i] = Math.sin(angle) * speed;
+    }
+    this._createMesh(count);
+  }
+
+  _createMesh(count) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1.0)');
+    grad.addColorStop(0.12, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(0.4, 'rgba(255,255,255,0.3)');
+    grad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(canvas);
+
+    this.geometry = new THREE.BufferGeometry();
+    this.posAttr = new THREE.BufferAttribute(new Float32Array(count * 3), 3);
+    this.posAttr.usage = THREE.DynamicDrawUsage;
+    this.colAttr = new THREE.BufferAttribute(new Float32Array(count * 3), 3);
+    this.colAttr.usage = THREE.DynamicDrawUsage;
+    this.geometry.setAttribute('position', this.posAttr);
+    this.geometry.setAttribute('color', this.colAttr);
+
+    this.material = new THREE.PointsMaterial({
+      map: tex,
+      size: 0.4,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      vertexColors: true,
+      sizeAttenuation: true,
+      depthWrite: false,
+      opacity: 0.9,
+    });
+
+    this.points = new THREE.Points(this.geometry, this.material);
+    this.points.frustumCulled = false;
+    this.scene.add(this.points);
+    this._setBaseColors();
+  }
+
+  _setBaseColors() {
+    const scheme = COLOR_SCHEMES[currentScheme];
+    this.baseColor.copy(scheme.shoalColors[this.colorIndex % scheme.shoalColors.length]);
+    const arr = this.colAttr.array;
+    for (let i = 0; i < this.maxCount; i++) {
+      const vary = 0.85 + Math.random() * 0.3;
+      arr[i*3]   = this.baseColor.r * vary;
+      arr[i*3+1] = this.baseColor.g * vary;
+      arr[i*3+2] = this.baseColor.b * vary;
+    }
+    this.colAttr.needsUpdate = true;
+  }
+
+  updateColors() { this._setBaseColors(); }
+
+  update(features, whales, dt, elapsed) {
+    if (dt > 0.1) dt = 0.1;
+    const sens = sensitivity;
+    const p = currentPreset;
+
+    // ═══ AUDIO → VISUAL MAPPINGS ═══
+
+    // TEMPO → Swimming speed (massive range: 0.3x to 3x)
+    const speedMult = 0.3 + (features.tempo / 100) * 1.0 * p.tempo * sens;
+
+    // TURBULENCE → Chaos / random perturbation (0 to very high)
+    const turbMult = features.turbulence * p.turbulence * sens;
+
+    // DYNAMICS → Spatial expansion AND brightness
+    const dynamicsVal = features.dynamics * p.dynamics * sens;
+    const dynamicsScale = 1.0 + dynamicsVal * 2.5;
+
+    // COMPLEXITY → Cohesion (complex = dispersed, simple = tight)
+    const complexVal = features.complexity * p.complexity * sens;
+    const cohesionMod = Math.max(0.1, 1.0 - complexVal * 0.8);
+
+    // BRIGHTNESS → Colour intensity boost
+    const brightnessVal = features.brightness * p.brightness * sens;
+
+    // DENSITY → Active particle count
+    const targetActive = Math.max(30, Math.floor(
+      this.maxCount * (0.15 + 0.85 * Math.min(1, 0.2 + features.density * p.density * sens * 0.8))
+    ));
+    const step = Math.max(1, Math.min(20, Math.abs(targetActive - this.activeCount)));
+    this.activeCount += Math.sign(targetActive - this.activeCount) * step;
+    this.activeCount = Math.max(30, Math.min(this.maxCount, this.activeCount));
+    const NC = this.activeCount;
+
+    const curMaxSpeed = this.maxSpeed * speedMult;
+    const curMaxForce = this.maxForce * Math.max(0.5, speedMult);
+    const curPerception = this.perceptionRadius * dynamicsScale;
+    const cohW = this.cohesionWeight * cohesionMod;
+
+    // Build grid
+    this.grid.clear();
+    for (let i = 0; i < NC; i++) {
+      this.grid.insert(this.px[i], this.py[i], this.pz[i], i);
+    }
+
+    let sx, sy, sz, ax, ay, az, cx, cy, cz;
+    let sepCount, aliCount, cohCount;
+
+    for (let i = 0; i < NC; i++) {
+      const bx = this.px[i], by = this.py[i], bz = this.pz[i];
+      const bvx = this.vx[i], bvy = this.vy[i], bvz = this.vz[i];
+      sx=0;sy=0;sz=0; ax=0;ay=0;az=0; cx=0;cy=0;cz=0;
+      sepCount=0; aliCount=0; cohCount=0;
+
+      this.grid.query(bx, by, bz, this._neighbors);
+      const percSq = curPerception * curPerception;
+      const sepDist = curPerception * 0.45;
+      const sepSq = sepDist * sepDist;
+
+      for (let j = 0; j < this._neighbors.length; j++) {
+        const ni = this._neighbors[j];
+        if (ni === i) continue;
+        const dx = bx - this.px[ni], dy = by - this.py[ni], dz = bz - this.pz[ni];
+        const distSq = dx*dx + dy*dy + dz*dz;
+        if (distSq < percSq && distSq > 0.0001) {
+          ax += this.vx[ni]; ay += this.vy[ni]; az += this.vz[ni]; aliCount++;
+          cx += this.px[ni]; cy += this.py[ni]; cz += this.pz[ni]; cohCount++;
+          if (distSq < sepSq) {
+            const inv = 1 / (Math.sqrt(distSq) + 0.01);
+            sx += dx * inv; sy += dy * inv; sz += dz * inv; sepCount++;
+          }
+        }
+      }
+
+      let forceX = 0, forceY = 0, forceZ = 0;
+
+      if (sepCount > 0) {
+        sx /= sepCount; sy /= sepCount; sz /= sepCount;
+        const sm = Math.sqrt(sx*sx+sy*sy+sz*sz) || 1;
+        forceX += (sx/sm * curMaxSpeed - bvx) * this.separationWeight;
+        forceY += (sy/sm * curMaxSpeed - bvy) * this.separationWeight;
+        forceZ += (sz/sm * curMaxSpeed - bvz) * this.separationWeight;
+      }
+      if (aliCount > 0) {
+        ax /= aliCount; ay /= aliCount; az /= aliCount;
+        const am = Math.sqrt(ax*ax+ay*ay+az*az) || 1;
+        forceX += (ax/am * curMaxSpeed - bvx) * this.alignmentWeight;
+        forceY += (ay/am * curMaxSpeed - bvy) * this.alignmentWeight;
+        forceZ += (az/am * curMaxSpeed - bvz) * this.alignmentWeight;
+      }
+      if (cohCount > 0) {
+        cx /= cohCount; cy /= cohCount; cz /= cohCount;
+        let dx2 = cx - bx, dy2 = cy - by, dz2 = cz - bz;
+        const cm = Math.sqrt(dx2*dx2+dy2*dy2+dz2*dz2) || 1;
+        forceX += (dx2/cm * curMaxSpeed - bvx) * cohW;
+        forceY += (dy2/cm * curMaxSpeed - bvy) * cohW;
+        forceZ += (dz2/cm * curMaxSpeed - bvz) * cohW;
+      }
+
+      // Whale avoidance
+      for (let w = 0; w < whales.length; w++) {
+        const whale = whales[w];
+        const dx = bx - whale.position.x, dy = by - whale.position.y, dz = bz - whale.position.z;
+        const distSq = dx*dx + dy*dy + dz*dz;
+        const fieldR = whale.displacementRadius;
+        if (distSq < fieldR * fieldR && distSq > 0.01) {
+          const dist = Math.sqrt(distSq);
+          const str = (1 - dist / fieldR) * whale.displacementStrength;
+          forceX += (dx/dist)*str*this.avoidanceWeight;
+          forceY += (dy/dist)*str*this.avoidanceWeight;
+          forceZ += (dz/dist)*str*this.avoidanceWeight;
+        }
+      }
+
+      // TURBULENCE: dramatic random perturbation when audio is turbulent
+      const turbAmt = (0.08 + turbMult * 3.0) * this.turbulenceWeight;
+      forceX += (Math.random()-0.5) * turbAmt * curMaxSpeed;
+      forceY += (Math.random()-0.5) * turbAmt * curMaxSpeed * 0.7;
+      forceZ += (Math.random()-0.5) * turbAmt * curMaxSpeed;
+
+      // Boundaries
+      const bound = this.bounds, margin = 4, bStr = 1.0;
+      if (bx > bound-margin)  forceX -= (bx-bound+margin)*bStr;
+      if (bx < -bound+margin) forceX -= (bx+bound-margin)*bStr;
+      if (by > bound*0.6-margin)  forceY -= (by-bound*0.6+margin)*bStr;
+      if (by < -bound*0.6+margin) forceY -= (by+bound*0.6-margin)*bStr;
+      if (bz > bound-margin)  forceZ -= (bz-bound+margin)*bStr;
+      if (bz < -bound+margin) forceZ -= (bz+bound-margin)*bStr;
+
+      // Clamp force
+      const fMag = Math.sqrt(forceX*forceX+forceY*forceY+forceZ*forceZ);
+      if (fMag > curMaxForce) {
+        const s = curMaxForce / fMag;
+        forceX *= s; forceY *= s; forceZ *= s;
+      }
+
+      this.vx[i] += forceX * dt;
+      this.vy[i] += forceY * dt;
+      this.vz[i] += forceZ * dt;
+
+      const spd = Math.sqrt(this.vx[i]**2+this.vy[i]**2+this.vz[i]**2);
+      if (spd > curMaxSpeed) {
+        const s = curMaxSpeed / spd;
+        this.vx[i]*=s; this.vy[i]*=s; this.vz[i]*=s;
+      }
+      if (spd < curMaxSpeed * 0.08) {
+        this.vx[i] += (Math.random()-0.5)*0.15;
+        this.vz[i] += (Math.random()-0.5)*0.15;
+      }
+
+      this.px[i] += this.vx[i] * dt;
+      this.py[i] += this.vy[i] * dt;
+      this.pz[i] += this.vz[i] * dt;
+    }
+
+    // Transfer to GPU
+    const pos = this.posAttr.array;
+    for (let i = 0; i < this.maxCount; i++) {
+      if (i < NC) {
+        pos[i*3]=this.px[i]; pos[i*3+1]=this.py[i]; pos[i*3+2]=this.pz[i];
+      } else {
+        pos[i*3]=9999; pos[i*3+1]=9999; pos[i*3+2]=9999;
+      }
+    }
+    this.posAttr.needsUpdate = true;
+
+    // ═══ COLOUR MODULATION: brightness shifts particle colour intensity per frame ═══
+    const colorArr = this.colAttr.array;
+    const brightBoost = 1.0 + brightnessVal * 1.5 + dynamicsVal * 1.0;
+    const bc = this.baseColor;
+    for (let i = 0; i < NC; i++) {
+      // Per-particle subtle variation stays, but brightness modulates all
+      const base = 0.7 + (Math.sin(i * 1.37 + elapsed * 0.5) * 0.15 + 0.15);
+      colorArr[i*3]   = Math.min(1.5, bc.r * base * brightBoost);
+      colorArr[i*3+1] = Math.min(1.5, bc.g * base * brightBoost);
+      colorArr[i*3+2] = Math.min(1.5, bc.b * base * brightBoost);
+    }
+    this.colAttr.needsUpdate = true;
+
+    // PARTICLE SIZE: dramatic response to dynamics (0.15 quiet → 1.2 loud)
+    this.material.size = 0.15 + dynamicsVal * 0.6 + brightnessVal * 0.15 + 0.1;
+    this.material.opacity = 0.5 + Math.min(0.5, dynamicsVal * 0.5);
+  }
+
+  dispose() {
+    this.scene.remove(this.points);
+    this.geometry.dispose();
+    this.material.map.dispose();
+    this.material.dispose();
+  }
+}
+
+/* ================================================================
+   6. WHALE — AMPLIFIED audio reactivity
+   ================================================================ */
+class Whale {
+  constructor(config, scene) {
+    this.scene = scene;
+    this.position = new THREE.Vector3();
+    this.velocity = new THREE.Vector3();
+    this.scale = config.scale || 3;
+    this.baseDisplacementRadius = (config.displacementRadius || 8) * this.scale * 0.5;
+    this.displacementRadius = this.baseDisplacementRadius;
+    this.displacementStrength = config.displacementStrength || 2.5;
+    this.breathPeriod = config.breathPeriod || 8 + Math.random() * 4;
+    this.breathPhase = Math.random() * Math.PI * 2;
+    this.pathSpeed = config.pathSpeed || 0.03;
+    this.pathProgress = config.phaseOffset || 0;
+
+    const pts = [];
+    const nPts = 8;
+    const r = config.pathRadius || 18;
+    const rVar = r * 0.35;
+    const hVar = config.pathHeight || 3;
+    const yOff = config.yOffset || 0;
+    for (let i = 0; i < nPts; i++) {
+      const t = (i / nPts) * Math.PI * 2;
+      const radius = r + Math.sin(t * 2 + config.seed * 5) * rVar;
+      pts.push(new THREE.Vector3(
+        Math.cos(t) * radius,
+        yOff + Math.sin(t * 3 + config.seed * 3) * hVar,
+        Math.sin(t) * radius
+      ));
+    }
+    this.path = new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.5);
+    this._createMesh();
+    this.position.copy(this.path.getPointAt(0));
+  }
+
+  _createMesh() {
+    const scheme = COLOR_SCHEMES[currentScheme];
+    const coreGeo = new THREE.IcosahedronGeometry(1, 3);
+    this.coreMat = new THREE.MeshBasicMaterial({
+      color: scheme.whaleCore, transparent: true, opacity: 0.15, depthWrite: false,
+    });
+    this.coreMesh = new THREE.Mesh(coreGeo, this.coreMat);
+    this.coreMesh.scale.setScalar(this.scale * 0.8);
+
+    const glowGeo = new THREE.IcosahedronGeometry(1, 4);
+    this.glowMat = new THREE.ShaderMaterial({
+      vertexShader: WhaleGlowVert,
+      fragmentShader: WhaleGlowFrag,
+      uniforms: {
+        uColor: { value: scheme.whaleGlow.clone() },
+        uBreath: { value: 0 },
+        uStrength: { value: 0.6 },
+        uTime: { value: 0 },
+      },
+      transparent: true, blending: THREE.AdditiveBlending,
+      depthWrite: false, side: THREE.FrontSide,
+    });
+    this.glowMesh = new THREE.Mesh(glowGeo, this.glowMat);
+    this.glowMesh.scale.setScalar(this.scale * 1.8);
+
+    this.group = new THREE.Group();
+    this.group.add(this.coreMesh);
+    this.group.add(this.glowMesh);
+    this.scene.add(this.group);
+  }
+
+  update(features, dt, elapsed) {
+    const p = currentPreset;
+    const sens = sensitivity;
+
+    // TEMPO → path speed (dramatic range)
+    const tempoFactor = 0.3 + (features.tempo / 100) * 0.8 * p.tempo * sens;
+    this.pathProgress += this.pathSpeed * dt * tempoFactor;
+    if (this.pathProgress > 1) this.pathProgress -= 1;
+
+    const target = this.path.getPointAt(this.pathProgress % 1);
+    const prevPos = this.position.clone();
+    this.position.lerp(target, 0.02 + dt * 0.5);
+    this.velocity.subVectors(this.position, prevPos);
+
+    const breathVal = Math.sin(elapsed * (Math.PI * 2 / this.breathPeriod) + this.breathPhase);
+
+    // DYNAMICS → displacement field strength AND glow (BIG response)
+    const dynVal = features.dynamics * p.dynamics * sens;
+    this.displacementStrength = 1.5 + dynVal * 5.0;
+    this.displacementRadius = this.baseDisplacementRadius * (1 + dynVal * 0.5);
+
+    this.group.position.copy(this.position);
+
+    if (this.velocity.lengthSq() > 0.00001) {
+      const dir = this.velocity.clone().normalize();
+      const angle = Math.atan2(dir.x, dir.z);
+      this.group.rotation.y += (angle - this.group.rotation.y) * 0.02;
+    }
+
+    // Scale: dynamics pulses the whale visibly
+    const breathScale = 1.0 + breathVal * 0.1;
+    const dynScale = 1.0 + dynVal * 0.4;
+    this.coreMesh.scale.setScalar(this.scale * 0.8 * breathScale * dynScale);
+    this.glowMesh.scale.setScalar(this.scale * (1.6 + dynVal * 1.0) * breathScale);
+
+    // GLOW STRENGTH: from subtle to blazing based on dynamics
+    this.glowMat.uniforms.uBreath.value = breathVal * Math.PI;
+    this.glowMat.uniforms.uStrength.value = 0.25 + dynVal * 1.5 + breathVal * 0.15;
+    this.glowMat.uniforms.uTime.value = elapsed;
+
+    this.coreMat.opacity = 0.08 + dynVal * 0.25;
+  }
+
+  updateScheme() {
+    const scheme = COLOR_SCHEMES[currentScheme];
+    this.coreMat.color.copy(scheme.whaleCore);
+    this.glowMat.uniforms.uColor.value.copy(scheme.whaleGlow);
+  }
+
+  dispose() {
+    this.scene.remove(this.group);
+    this.coreMesh.geometry.dispose(); this.coreMat.dispose();
+    this.glowMesh.geometry.dispose(); this.glowMat.dispose();
+  }
+}
+
+/* ================================================================
+   7. ENVIRONMENT
+   ================================================================ */
+class Environment {
+  constructor(scene) {
+    this.scene = scene;
+    this.godRays = [];
+    this.ambientPoints = null;
+    this._createGodRays();
+    this._createAmbientParticles();
+    this._createCausticsFloor();
+  }
+
+  _createGodRays() {
+    const scheme = COLOR_SCHEMES[currentScheme];
+    for (let i = 0; i < 7; i++) {
+      const width = 1.5 + Math.random() * 3;
+      const height = 35 + Math.random() * 20;
+      const geo = new THREE.PlaneGeometry(width, height);
+      const mat = new THREE.ShaderMaterial({
+        vertexShader: GodRayVert, fragmentShader: GodRayFrag,
+        uniforms: {
+          uColor: { value: scheme.godRay.clone() },
+          uOpacity: { value: 0.6 + Math.random() * 0.4 },
+          uTime: { value: Math.random() * 100 },
+        },
+        transparent: true, blending: THREE.AdditiveBlending,
+        depthWrite: false, side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set((Math.random()-0.5)*50, 12+Math.random()*8, (Math.random()-0.5)*50);
+      mesh.rotation.set(-0.15+Math.random()*0.3, Math.random()*Math.PI, (Math.random()-0.5)*0.2);
+      this.scene.add(mesh);
+      this.godRays.push({ mesh, mat, baseX: mesh.position.x, phase: Math.random()*Math.PI*2 });
+    }
+  }
+
+  _createAmbientParticles() {
+    const count = 600;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    const scheme = COLOR_SCHEMES[currentScheme];
+    for (let i = 0; i < count; i++) {
+      positions[i*3]=(Math.random()-0.5)*60;
+      positions[i*3+1]=(Math.random()-0.5)*40;
+      positions[i*3+2]=(Math.random()-0.5)*60;
+      const v = 0.5+Math.random()*0.5;
+      colors[i*3]=scheme.ambient.r*v; colors[i*3+1]=scheme.ambient.g*v; colors[i*3+2]=scheme.ambient.b*v;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const canvas = document.createElement('canvas');
+    canvas.width=32; canvas.height=32;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(16,16,0,16,16,16);
+    grad.addColorStop(0,'rgba(255,255,255,0.6)');
+    grad.addColorStop(1,'rgba(255,255,255,0.0)');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,32,32);
+
+    this.ambientMat = new THREE.PointsMaterial({
+      map: new THREE.CanvasTexture(canvas), size: 0.12, transparent: true,
+      blending: THREE.AdditiveBlending, vertexColors: true,
+      sizeAttenuation: true, depthWrite: false, opacity: 0.2,
+    });
+    this.ambientPoints = new THREE.Points(geo, this.ambientMat);
+    this.ambientPoints.frustumCulled = false;
+    this.scene.add(this.ambientPoints);
+    this._ambientPositions = positions;
+  }
+
+  _createCausticsFloor() {
+    const geo = new THREE.PlaneGeometry(80, 80);
+    this.causticsMat = new THREE.MeshBasicMaterial({
+      color: 0x003322, transparent: true, opacity: 0.04, depthWrite: false,
+    });
+    this.causticsFloor = new THREE.Mesh(geo, this.causticsMat);
+    this.causticsFloor.rotation.x = -Math.PI / 2;
+    this.causticsFloor.position.y = -14;
+    this.scene.add(this.causticsFloor);
+  }
+
+  update(features, elapsed) {
+    const showRays = document.getElementById('chk-godrays').checked;
+    const dynVal = features.dynamics * currentPreset.dynamics * sensitivity;
+    const brightVal = features.brightness * currentPreset.brightness * sensitivity;
+    for (const ray of this.godRays) {
+      ray.mat.uniforms.uTime.value = elapsed;
+      ray.mesh.position.x = ray.baseX + Math.sin(elapsed*0.15+ray.phase)*2;
+      ray.mesh.visible = showRays;
+      // God rays pulse with dynamics AND brightness
+      ray.mat.uniforms.uOpacity.value = 0.3 + brightVal * 0.5 + dynVal * 0.4;
+    }
+
+    const pos = this._ambientPositions;
+    const count = pos.length / 3;
+    for (let i = 0; i < count; i++) {
+      pos[i*3+1] -= 0.003;
+      pos[i*3]   += Math.sin(elapsed*0.1+i*0.1)*0.002;
+      pos[i*3+2] += Math.cos(elapsed*0.08+i*0.15)*0.002;
+      if (pos[i*3+1] < -20) pos[i*3+1] = 20;
+    }
+    this.ambientPoints.geometry.attributes.position.needsUpdate = true;
+    this.ambientMat.opacity = 0.1 + dynVal * 0.2;
+  }
+
+  updateScheme() {
+    const scheme = COLOR_SCHEMES[currentScheme];
+    for (const ray of this.godRays) ray.mat.uniforms.uColor.value.copy(scheme.godRay);
+    const colors = this.ambientPoints.geometry.attributes.color.array;
+    for (let i = 0; i < colors.length/3; i++) {
+      const v=0.5+Math.random()*0.5;
+      colors[i*3]=scheme.ambient.r*v; colors[i*3+1]=scheme.ambient.g*v; colors[i*3+2]=scheme.ambient.b*v;
+    }
+    this.ambientPoints.geometry.attributes.color.needsUpdate = true;
+  }
+}
+
+/* ================================================================
+   8. MIDI SUPPORT
+   ================================================================ */
+class MIDIController {
+  constructor() {
+    this.active = false;
+    this.lastVelocity = 0;
+    this.lastPitch = 60;
+    this.sustainHeld = false;
+    this._noteWindow = [];
+    this._init();
+  }
+  async _init() {
+    if (!navigator.requestMIDIAccess) return;
+    try {
+      const midi = await navigator.requestMIDIAccess();
+      midi.inputs.forEach(input => { input.onmidimessage = e => this._handle(e); });
+      midi.onstatechange = e => {
+        if (e.port.type==='input' && e.port.state==='connected') {
+          e.port.onmidimessage = ev => this._handle(ev);
+          showStatus('MIDI: ' + e.port.name);
+        }
+      };
+      this.active = true;
+    } catch(e) {}
+  }
+  _handle(msg) {
+    const [st, d1, d2] = msg.data;
+    const cmd = st >> 4;
+    if (cmd===9 && d2>0) { this.lastVelocity=d2/127; this.lastPitch=d1; this._noteWindow.push(performance.now()); }
+    else if (cmd===11 && d1===64) { this.sustainHeld = d2>=64; }
+  }
+  getOverrides(ts) {
+    this._noteWindow = this._noteWindow.filter(t => t > ts-4000);
+    return {
+      dynamics: this.lastVelocity,
+      density: Math.min(1, this._noteWindow.length/16),
+      brightness: Math.min(1, (this.lastPitch-36)/60),
+    };
+  }
+}
+
+/* ================================================================
+   9. MAIN APPLICATION
+   ================================================================ */
+class App {
+  constructor() {
+    this.clock = new THREE.Clock();
+    this.shoals = [];
+    this.whales = [];
+    this.environment = null;
+    this.audio = new AudioAnalyzer();
+    this.midi = new MIDIController();
+    this.isAudioActive = false;
+    this._fpsFrames = 0;
+    this._fpsTime = 0;
+
+    // VU meter canvas
+    this.vuCanvas = document.getElementById('vu-canvas');
+    this.vuCtx = this.vuCanvas.getContext('2d');
+
+    this._initRenderer();
+    this._initScene();
+    this._initPostProcessing();
+    this._initUI();
+    this._buildDefaultScene();
+    this._animate();
+    window.addEventListener('resize', () => this._onResize());
+  }
+
+  _initRenderer() {
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
+    const canvas = this.renderer.domElement;
+    canvas.id = 'main-canvas';
+    document.body.prepend(canvas);
+  }
+
+  _initScene() {
+    this.scene = new THREE.Scene();
+    const scheme = COLOR_SCHEMES[currentScheme];
+    this.scene.background = scheme.background.clone();
+    this.scene.fog = new THREE.Fog(scheme.fogFar.clone(), 5, 50);
+
+    this.camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 120);
+    this.camera.position.set(0, 2, 22);
+
+    this.ambientLight = new THREE.AmbientLight(0x003355, 0.25);
+    this.scene.add(this.ambientLight);
+    this.sunLight = new THREE.DirectionalLight(0xaaddff, 0.9);
+    this.sunLight.position.set(5, 30, 10);
+    this.scene.add(this.sunLight);
+    this.hemiLight = new THREE.HemisphereLight(0x446688, 0x000d1a, 0.3);
+    this.scene.add(this.hemiLight);
+
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.04;
+    this.controls.autoRotate = true;
+    this.controls.autoRotateSpeed = 0.15;
+    this.controls.minDistance = 5;
+    this.controls.maxDistance = 40;
+    this.controls.minPolarAngle = Math.PI / 5;
+    this.controls.maxPolarAngle = Math.PI * 4 / 5;
+    this.controls.enablePan = false;
+  }
+
+  _initPostProcessing() {
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight), 1.4, 0.8, 0.12
+    );
+    this.composer.addPass(this.bloomPass);
+    this.vignettePass = new ShaderPass(VignetteShader);
+    this.composer.addPass(this.vignettePass);
+    this.composer.addPass(new OutputPass());
+  }
+
+  _buildDefaultScene() {
+    this.environment = new Environment(this.scene);
+    this._rebuildShoals(2, 500);
+    this._rebuildWhales(2);
+  }
+
+  _rebuildShoals(count, pps) {
+    for (const s of this.shoals) s.dispose();
+    this.shoals = [];
+    for (let i = 0; i < count; i++) this.shoals.push(new Shoal(pps, i, this.scene));
+  }
+
+  _rebuildWhales(count) {
+    for (const w of this.whales) w.dispose();
+    this.whales = [];
+    const configs = [
+      { scale:3.5, pathRadius:22, pathHeight:3, pathSpeed:0.04, phaseOffset:0, yOffset:1, seed:1, displacementRadius:9, breathPeriod:9 },
+      { scale:2.5, pathRadius:16, pathHeight:2, pathSpeed:0.055, phaseOffset:Math.PI*0.7, yOffset:-2, seed:2, displacementRadius:7, breathPeriod:7 },
+      { scale:1.8, pathRadius:13, pathHeight:1.5, pathSpeed:0.07, phaseOffset:Math.PI*1.4, yOffset:-4, seed:3, displacementRadius:5.5, breathPeriod:6 },
+    ];
+    for (let i = 0; i < count && i < configs.length; i++) {
+      this.whales.push(new Whale(configs[i], this.scene));
+    }
+  }
+
+  _initUI() {
+    const self = this;
+
+    // Audio source
+    document.querySelectorAll('input[name="source"]').forEach(r => {
+      r.addEventListener('change', () => {
+        document.getElementById('file-upload-area').style.display =
+          r.value === 'file' && r.checked ? 'block' : 'none';
+      });
+    });
+
+    // File upload
+    document.getElementById('audio-file').addEventListener('change', e => {
+      if (e.target.files.length) {
+        const file = e.target.files[0];
+        document.getElementById('file-name').textContent = file.name;
+        if (self.audio.audioEl) self.audio.audioEl.pause();
+        const el = new Audio();
+        el.src = URL.createObjectURL(file);
+        el.crossOrigin = 'anonymous';
+        el.loop = true;
+        self.audio.setAudioElement(el);
+      }
+    });
+
+    // Start / Stop
+    document.getElementById('btn-start').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-start');
+      if (self.isAudioActive) {
+        self.audio.stop();
+        self.isAudioActive = false;
+        btn.textContent = 'Start Audio Analysis';
+        btn.classList.remove('active');
+        document.getElementById('vu-status').textContent = 'No Input';
+        document.getElementById('vu-db').textContent = '-∞ dB';
+        document.getElementById('vu-peak-fill').style.width = '0%';
+        showStatus('Audio stopped');
+        return;
+      }
+      const source = document.querySelector('input[name="source"]:checked').value;
+      if (source === 'file' && !self.audio.audioEl) {
+        showStatus('Please select an audio file first', true);
+        return;
+      }
+      btn.textContent = 'Connecting...';
+      btn.disabled = true;
+      const ok = await self.audio.init(source);
+      btn.disabled = false;
+      if (ok) {
+        self.isAudioActive = true;
+        btn.textContent = 'Stop Audio';
+        btn.classList.add('active');
+        document.getElementById('instructions').style.opacity = '0';
+        document.getElementById('vu-status').textContent = 'Listening';
+        showStatus('Audio active — ' + source);
+      } else {
+        btn.textContent = 'Start Audio Analysis';
+      }
+    });
+
+    // Presets
+    const presetDescs = {
+      expressive: PRESETS.expressive.desc,
+      rhythmic: PRESETS.rhythmic.desc,
+      harmonic: PRESETS.harmonic.desc,
+    };
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const name = btn.dataset.preset;
+        currentPreset = { ...PRESETS[name] };
+        document.getElementById('preset-desc').textContent = presetDescs[name];
+      });
+    });
+
+    // Sliders
+    const wire = (id, vid, cb) => {
+      const sl = document.getElementById(id);
+      const vl = document.getElementById(vid);
+      sl.addEventListener('input', () => { vl.textContent = sl.value; cb(parseFloat(sl.value)); });
+    };
+    wire('sl-shoals', 'val-shoals', v => self._rebuildShoals(v, parseInt(document.getElementById('sl-particles').value)));
+    wire('sl-particles', 'val-particles', v => self._rebuildShoals(parseInt(document.getElementById('sl-shoals').value), v));
+    wire('sl-whales', 'val-whales', v => self._rebuildWhales(v));
+    wire('sl-sensitivity', 'val-sensitivity', v => { sensitivity = v; });
+    wire('sl-bloom', 'val-bloom', v => { self.bloomPass.strength = v; });
+
+    document.getElementById('sel-color').addEventListener('change', e => {
+      currentScheme = e.target.value;
+      self._applyScheme();
+    });
+
+    document.getElementById('chk-autorotate').addEventListener('change', e => {
+      self.controls.autoRotate = e.target.checked;
+    });
+  }
+
+  _applyScheme() {
+    const scheme = COLOR_SCHEMES[currentScheme];
+    this.scene.background.copy(scheme.background);
+    this.scene.fog.color.copy(scheme.fogFar);
+    for (const s of this.shoals) s.updateColors();
+    for (const w of this.whales) w.updateScheme();
+    this.environment.updateScheme();
+  }
+
+  _updateMetrics(f) {
+    const set = (id, val, pct) => {
+      document.getElementById('mv-'+id).textContent = val;
+      document.getElementById('mf-'+id).style.width = Math.min(100, pct)+'%';
+    };
+    set('tempo', Math.round(f.tempo)+' BPM', (f.tempo/200)*100);
+    set('bright', f.brightness.toFixed(2), f.brightness*100);
+    set('dynamics', f.dynamics.toFixed(2), f.dynamics*100);
+    set('turb', f.turbulence.toFixed(2), f.turbulence*100);
+    set('density', f.density.toFixed(2), f.density*100);
+    set('complex', f.complexity.toFixed(2), f.complexity*100);
+  }
+
+  _updateVU() {
+    const w = this.vuCanvas.width, h = this.vuCanvas.height;
+    this.audio.drawVU(this.vuCtx, w, h);
+
+    if (this.isAudioActive && this.audio.running) {
+      // Peak level bar
+      const dbNorm = Math.max(0, Math.min(1, (this.audio.rawDB + 60) / 60));
+      document.getElementById('vu-peak-fill').style.width = (dbNorm * 100) + '%';
+      // dB readout
+      const db = this.audio.rawDB;
+      document.getElementById('vu-db').textContent = db > -80 ? db.toFixed(1) + ' dB' : '-∞ dB';
+      // Status color
+      const statusEl = document.getElementById('vu-status');
+      if (db > -12) { statusEl.textContent = 'LOUD'; statusEl.style.color = '#ff6644'; }
+      else if (db > -30) { statusEl.textContent = 'Active'; statusEl.style.color = '#44dd88'; }
+      else if (db > -55) { statusEl.textContent = 'Quiet'; statusEl.style.color = '#448866'; }
+      else { statusEl.textContent = 'Silent'; statusEl.style.color = '#446666'; }
+    }
+  }
+
+  _animate() {
+    requestAnimationFrame(() => this._animate());
+
+    const dt = Math.min(this.clock.getDelta(), 0.05);
+    const elapsed = this.clock.getElapsedTime();
+    const now = performance.now();
+
+    // FPS
+    this._fpsFrames++;
+    if (now - this._fpsTime > 500) {
+      document.getElementById('fps').textContent = Math.round(this._fpsFrames/((now-this._fpsTime)/1000))+' fps';
+      this._fpsFrames = 0; this._fpsTime = now;
+    }
+
+    // Audio
+    if (this.isAudioActive) this.audio.update(now);
+
+    let features = this.audio.getFeatures();
+
+    // MIDI merge
+    if (this.midi.active) {
+      const mo = this.midi.getOverrides(now);
+      if (mo.dynamics > 0.01) features.dynamics = Math.max(features.dynamics, mo.dynamics);
+      if (mo.density > 0.01) features.density = Math.max(features.density, mo.density);
+      if (mo.brightness > 0.01) features.brightness = mo.brightness*0.5 + features.brightness*0.5;
+    }
+
+    // Gentle ambient when no audio
+    if (!this.isAudioActive) {
+      features = {
+        tempo: 85 + Math.sin(elapsed*0.1)*10,
+        brightness: 0.3 + Math.sin(elapsed*0.15)*0.08,
+        dynamics: 0.15 + Math.sin(elapsed*0.2)*0.04,
+        turbulence: 0.06 + Math.sin(elapsed*0.12)*0.02,
+        density: 0.5 + Math.sin(elapsed*0.08)*0.08,
+        complexity: 0.2 + Math.sin(elapsed*0.18)*0.06,
+      };
+    }
+
+    // Update systems
+    for (const whale of this.whales) whale.update(features, dt, elapsed);
+    for (const shoal of this.shoals) shoal.update(features, this.whales, dt, elapsed);
+    this.environment.update(features, elapsed);
+
+    // Dynamic bloom: pulse with dynamics
+    if (this.isAudioActive) {
+      const dynBoost = features.dynamics * currentPreset.dynamics * sensitivity;
+      this.bloomPass.strength = parseFloat(document.getElementById('sl-bloom').value) + dynBoost * 0.6;
+    }
+
+    // Camera float
+    this.camera.position.y += Math.sin(elapsed*0.3)*0.001;
+    this.sunLight.intensity = 0.9 + Math.sin(elapsed*0.4)*0.1;
+
+    this.controls.update();
+    this._updateMetrics(features);
+    this._updateVU();
+    this.composer.render();
+  }
+
+  _onResize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    this.camera.aspect = w/h;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(w, h);
+    this.composer.setSize(w, h);
+    this.bloomPass.resolution.set(w, h);
+  }
+}
+
+/* ================================================================
+   UTILITIES
+   ================================================================ */
+function showStatus(msg, isError = false) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.style.color = isError ? '#dd6644' : '#44aa88';
+  el.classList.add('visible');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('visible'), 3000);
+}
+
+/* ================================================================
+   LAUNCH
+   ================================================================ */
+const app = new App();
+
+</script>
+</body>
+</html>
