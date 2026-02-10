@@ -3,273 +3,241 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marine Audio-Reactive Visual System</title>
+<title>Marine Audio-Reactive Behavioural System</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{overflow:hidden;background:#000a1a;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#88ccdd}
 canvas#main-canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
 
-/* ── UI Panel (left) ── */
+/* ── UI Panel ── */
 #ui-panel{
-  position:fixed;top:16px;left:16px;width:272px;
-  background:rgba(0,12,24,0.88);border:1px solid rgba(50,150,180,0.18);
-  border-radius:14px;padding:18px;backdrop-filter:blur(14px);
-  z-index:100;max-height:calc(100vh - 32px);overflow-y:auto;
-  scrollbar-width:thin;scrollbar-color:rgba(50,150,180,0.3) transparent;
+  position:fixed;top:12px;left:12px;width:264px;
+  background:rgba(0,10,22,0.92);border:1px solid rgba(50,150,180,0.15);
+  border-radius:12px;padding:14px;backdrop-filter:blur(12px);
+  z-index:100;max-height:calc(100vh - 24px);overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(50,150,180,0.25) transparent;
 }
-#ui-panel::-webkit-scrollbar{width:4px}
-#ui-panel::-webkit-scrollbar-thumb{background:rgba(50,150,180,0.3);border-radius:2px}
+#ui-panel::-webkit-scrollbar{width:3px}
+#ui-panel::-webkit-scrollbar-thumb{background:rgba(50,150,180,0.25);border-radius:2px}
+#ui-panel h2{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#4499aa;margin-bottom:12px;font-weight:500}
 
-#ui-panel h2{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:#55aacc;margin-bottom:14px;font-weight:500}
-.section{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(50,150,180,0.1)}
-.section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-.section-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#447788;margin-bottom:8px;font-weight:600}
+.section{margin-bottom:2px}
+.section-title{
+  font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#446677;
+  font-weight:600;padding:7px 0 5px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid rgba(50,150,180,0.06);user-select:none;
+}
+.section-title:hover{color:#66889a}
+.section-title .arrow{font-size:7px;transition:transform .2s;color:#446677}
+.section.collapsed .section-body{display:none}
+.section.collapsed .arrow{transform:rotate(-90deg)}
+.section-body{padding:6px 0 10px}
 
-/* Radio buttons */
-.radio-group label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12px;color:#88bbcc;transition:color .2s}
-.radio-group label:hover{color:#aaddee}
-.radio-group input[type="radio"]{accent-color:#33aacc;width:14px;height:14px}
+/* Radio */
+.radio-group label{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer;font-size:11px;color:#7faabb;transition:color .2s}
+.radio-group label:hover{color:#a0ccdd}
+.radio-group input[type="radio"]{accent-color:#33aacc;width:13px;height:13px}
 
 /* Buttons */
 .btn{
-  display:block;width:100%;padding:9px 14px;border:1px solid rgba(50,180,200,0.3);
-  border-radius:8px;background:rgba(0,60,80,0.3);color:#66ccdd;font-size:12px;
-  cursor:pointer;transition:all .25s;text-align:center;font-family:inherit;letter-spacing:.5px
+  display:block;width:100%;padding:7px 12px;border:1px solid rgba(50,180,200,0.25);
+  border-radius:7px;background:rgba(0,50,70,0.3);color:#5fbbcc;font-size:11px;
+  cursor:pointer;transition:all .2s;text-align:center;font-family:inherit;letter-spacing:.4px
 }
-.btn:hover{background:rgba(0,80,110,0.45);border-color:rgba(50,180,200,0.5);color:#88eeff}
-.btn.active{background:rgba(0,180,200,0.2);border-color:rgba(50,220,240,0.5);color:#aaffff}
-.btn:disabled{opacity:0.4;cursor:not-allowed}
-.btn-row{display:flex;gap:6px}
-.btn-row .btn{flex:1;padding:7px 6px;font-size:11px}
+.btn:hover{background:rgba(0,70,100,0.4);border-color:rgba(50,180,200,0.45);color:#88eeff}
+.btn.active{background:rgba(0,160,180,0.2);border-color:rgba(50,200,220,0.5);color:#aaffff}
+.btn:disabled{opacity:0.35;cursor:not-allowed}
+.btn-row{display:flex;gap:5px}
+.btn-row .btn{flex:1;padding:5px 4px;font-size:10px}
 
-#file-upload-area{display:none;margin-top:8px}
+#file-upload-area{display:none;margin-top:6px}
 #audio-file{display:none}
-#file-label{display:block;padding:8px;border:1px dashed rgba(50,150,180,0.25);border-radius:8px;text-align:center;font-size:11px;color:#557788;cursor:pointer}
-#file-label:hover{border-color:rgba(50,180,200,0.45);color:#88bbcc}
-#file-name{font-size:10px;color:#447766;margin-top:4px;text-align:center;min-height:14px}
+#file-label{display:block;padding:6px;border:1px dashed rgba(50,150,180,0.2);border-radius:6px;text-align:center;font-size:10px;color:#557788;cursor:pointer}
+#file-name{font-size:9px;color:#446766;margin-top:3px;text-align:center;min-height:12px}
 
-/* ── VU METER ── */
-#vu-section{margin-top:10px}
-#vu-canvas{width:100%;height:48px;border-radius:6px;background:rgba(0,20,35,0.6);border:1px solid rgba(50,150,180,0.12);display:block}
-#vu-label-row{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
-#vu-status{font-size:10px;color:#447766;text-transform:uppercase;letter-spacing:1px}
-#vu-db{font-size:11px;color:#55cc99;font-variant-numeric:tabular-nums;font-weight:600}
-#vu-peak-bar{width:100%;height:6px;background:rgba(0,20,35,0.6);border-radius:3px;margin-top:4px;overflow:hidden;border:1px solid rgba(50,150,180,0.08)}
-#vu-peak-fill{height:100%;width:0%;border-radius:3px;transition:width 60ms linear;
-  background:linear-gradient(90deg, #114433 0%, #22aa66 40%, #44dd88 65%, #aaff44 82%, #ffaa22 92%, #ff4422 100%)}
+/* VU */
+#vu-section{margin-top:8px}
+#vu-canvas{width:100%;height:40px;border-radius:5px;background:rgba(0,18,30,0.5);border:1px solid rgba(50,150,180,0.08);display:block}
+#vu-bar{width:100%;height:5px;background:rgba(0,18,30,0.5);border-radius:3px;margin-top:3px;overflow:hidden;border:1px solid rgba(50,150,180,0.06)}
+#vu-fill{height:100%;width:0%;border-radius:3px;transition:width 50ms linear;
+  background:linear-gradient(90deg,#113322 0%,#22aa66 35%,#44dd88 60%,#aaff44 78%,#ffaa22 90%,#ff4422 100%)}
+#vu-info{display:flex;justify-content:space-between;margin-top:2px}
+#vu-info span{font-size:9px;color:#446666;font-variant-numeric:tabular-nums}
 
 /* Sliders */
-.slider-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.slider-label{font-size:11px;color:#668899;flex:0 0 auto}
-.slider-val{font-size:10px;color:#55aa99;width:36px;text-align:right;font-variant-numeric:tabular-nums}
+.slider-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.slider-label{font-size:10px;color:#5a7888;flex:0 0 auto;min-width:60px}
+.slider-val{font-size:9px;color:#55aa99;width:30px;text-align:right;font-variant-numeric:tabular-nums}
 input[type="range"]{
-  flex:1;margin:0 8px;height:3px;-webkit-appearance:none;appearance:none;
-  background:rgba(50,150,180,0.15);border-radius:2px;outline:none
+  flex:1;margin:0 6px;height:2px;-webkit-appearance:none;appearance:none;
+  background:rgba(50,150,180,0.12);border-radius:1px;outline:none
 }
 input[type="range"]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:12px;height:12px;border-radius:50%;
-  background:#33aacc;cursor:pointer;border:none;box-shadow:0 0 6px rgba(50,180,220,0.4)
+  -webkit-appearance:none;width:10px;height:10px;border-radius:50%;
+  background:#33aacc;cursor:pointer;border:none;box-shadow:0 0 4px rgba(50,180,220,0.3)
 }
 
-/* Checkbox */
-.check-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.check-row input{accent-color:#33aacc}
-.check-row label{font-size:11px;color:#668899;cursor:pointer}
+/* Check */
+.check-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.check-row input{accent-color:#33aacc;width:13px;height:13px}
+.check-row label{font-size:10px;color:#5a7888;cursor:pointer}
 
-/* Dropdown */
+/* Select */
 select{
-  width:100%;padding:6px 10px;background:rgba(0,30,50,0.6);border:1px solid rgba(50,150,180,0.2);
-  border-radius:6px;color:#88ccdd;font-size:11px;font-family:inherit;outline:none;cursor:pointer
+  width:100%;padding:5px 8px;background:rgba(0,25,42,0.5);border:1px solid rgba(50,150,180,0.15);
+  border-radius:5px;color:#88ccdd;font-size:10px;font-family:inherit;outline:none;cursor:pointer
 }
-select option{background:#001a2a;color:#88ccdd}
 
-/* ── Metrics Panel (right) ── */
+/* ── Metrics Panel ── */
 #metrics-panel{
-  position:fixed;top:16px;right:16px;width:210px;
-  background:rgba(0,12,24,0.82);border:1px solid rgba(50,150,180,0.12);
-  border-radius:14px;padding:16px;backdrop-filter:blur(14px);z-index:100
+  position:fixed;top:12px;right:12px;width:190px;
+  background:rgba(0,10,22,0.85);border:1px solid rgba(50,150,180,0.1);
+  border-radius:12px;padding:14px;backdrop-filter:blur(12px);z-index:100
 }
-#metrics-panel h3{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#447788;margin-bottom:10px;font-weight:600}
-.metric{margin-bottom:8px}
-.metric-header{display:flex;justify-content:space-between;margin-bottom:3px}
-.metric-name{font-size:10px;color:#557788;text-transform:uppercase;letter-spacing:1px}
-.metric-value{font-size:10px;color:#55cc99;font-variant-numeric:tabular-nums}
-.metric-bar{height:4px;background:rgba(50,150,180,0.1);border-radius:2px;overflow:hidden}
-.metric-fill{height:100%;border-radius:2px;transition:width 80ms ease-out;min-width:0}
-.m-tempo .metric-fill{background:linear-gradient(90deg,#2266aa,#44aadd)}
-.m-bright .metric-fill{background:linear-gradient(90deg,#226688,#66eeff)}
-.m-dynamics .metric-fill{background:linear-gradient(90deg,#226644,#44dd88)}
-.m-turb .metric-fill{background:linear-gradient(90deg,#664422,#ddaa44)}
-.m-density .metric-fill{background:linear-gradient(90deg,#442266,#aa44dd)}
-.m-complex .metric-fill{background:linear-gradient(90deg,#662244,#dd4488)}
+#metrics-panel h3{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#446677;margin-bottom:8px;font-weight:600}
+.metric{margin-bottom:6px}
+.metric-header{display:flex;justify-content:space-between;margin-bottom:2px}
+.metric-name{font-size:9px;color:#4a6878;text-transform:uppercase;letter-spacing:.8px}
+.metric-value{font-size:9px;color:#55cc99;font-variant-numeric:tabular-nums}
+.metric-bar{height:3px;background:rgba(50,150,180,0.08);border-radius:2px;overflow:hidden}
+.metric-fill{height:100%;border-radius:2px;transition:width 60ms linear;min-width:0}
+.m-tempo .metric-fill{background:linear-gradient(90deg,#1a5588,#3399cc)}
+.m-bright .metric-fill{background:linear-gradient(90deg,#1a5566,#55ccee)}
+.m-dynamics .metric-fill{background:linear-gradient(90deg,#1a5533,#33cc77)}
+.m-turb .metric-fill{background:linear-gradient(90deg,#554422,#cc9933)}
+.m-density .metric-fill{background:linear-gradient(90deg,#331a55,#9944cc)}
+.m-complex .metric-fill{background:linear-gradient(90deg,#551a33,#cc3377)}
+#behav-state{font-size:9px;color:#557788;margin-top:8px;padding-top:6px;border-top:1px solid rgba(50,150,180,0.06);line-height:1.4}
 
-/* ── Preset description ── */
-#preset-desc{font-size:10px;color:#446677;margin-top:6px;line-height:1.4;min-height:28px;transition:opacity .3s}
-
-/* ── FPS counter ── */
-#fps{position:fixed;bottom:16px;right:16px;font-size:10px;color:rgba(80,160,200,0.35);z-index:100;font-variant-numeric:tabular-nums}
-
-/* ── Instructions overlay ── */
+#fps{position:fixed;bottom:12px;right:12px;font-size:9px;color:rgba(80,160,200,0.3);z-index:100;font-variant-numeric:tabular-nums}
 #instructions{
-  position:fixed;bottom:40px;left:50%;transform:translateX(-50%);
-  background:rgba(0,12,24,0.75);border:1px solid rgba(50,150,180,0.15);
-  border-radius:10px;padding:12px 24px;backdrop-filter:blur(10px);z-index:100;
-  font-size:12px;color:#668899;text-align:center;letter-spacing:.3px;
-  transition:opacity .5s;pointer-events:none
+  position:fixed;bottom:36px;left:50%;transform:translateX(-50%);
+  background:rgba(0,10,20,0.7);border:1px solid rgba(50,150,180,0.12);
+  border-radius:8px;padding:10px 20px;backdrop-filter:blur(8px);z-index:100;
+  font-size:11px;color:#556677;text-align:center;transition:opacity .5s;pointer-events:none
 }
-
-/* ── Status messages ── */
-#status{
-  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-  font-size:11px;color:#44aa88;z-index:100;text-align:center;
-  opacity:0;transition:opacity .4s;pointer-events:none
-}
+#status{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);font-size:10px;color:#44aa88;z-index:100;text-align:center;opacity:0;transition:opacity .4s;pointer-events:none}
 #status.visible{opacity:1}
 </style>
 </head>
 <body>
 
-<!-- ─── UI Panel ─── -->
 <div id="ui-panel">
   <h2>Marine Audio System</h2>
 
-  <!-- Audio Source -->
-  <div class="section">
-    <div class="section-title">Audio Source</div>
-    <div class="radio-group">
-      <label><input type="radio" name="source" value="mic" checked> Microphone Input</label>
-      <label><input type="radio" name="source" value="file"> Audio File Upload</label>
-      <label><input type="radio" name="source" value="system"> System Audio</label>
-    </div>
-    <div id="file-upload-area">
-      <label id="file-label" for="audio-file">Drop or click to select audio file</label>
-      <input type="file" id="audio-file" accept="audio/*">
-      <div id="file-name"></div>
-    </div>
-    <div style="margin-top:10px">
-      <button class="btn" id="btn-start">Start Audio Analysis</button>
-    </div>
-    <!-- VU Meter -->
-    <div id="vu-section">
-      <canvas id="vu-canvas" width="472" height="96"></canvas>
-      <div id="vu-peak-bar"><div id="vu-peak-fill"></div></div>
-      <div id="vu-label-row">
-        <span id="vu-status">No Input</span>
-        <span id="vu-db">-∞ dB</span>
+  <!-- ─── Audio Input ─── -->
+  <div class="section" id="sec-audio">
+    <div class="section-title" data-toggle>Audio Input <span class="arrow">▾</span></div>
+    <div class="section-body">
+      <div class="radio-group">
+        <label><input type="radio" name="source" value="mic" checked> Microphone</label>
+        <label><input type="radio" name="source" value="file"> Audio File</label>
+        <label><input type="radio" name="source" value="system"> System Audio</label>
+      </div>
+      <div id="file-upload-area">
+        <label id="file-label" for="audio-file">Select audio file</label>
+        <input type="file" id="audio-file" accept="audio/*">
+        <div id="file-name"></div>
+      </div>
+      <div style="margin-top:6px"><button class="btn" id="btn-start">Start Audio</button></div>
+      <div id="vu-section">
+        <canvas id="vu-canvas" width="472" height="80"></canvas>
+        <div id="vu-bar"><div id="vu-fill"></div></div>
+        <div id="vu-info"><span id="vu-status">No Input</span><span id="vu-db">-∞ dB</span></div>
       </div>
     </div>
   </div>
 
-  <!-- Presets -->
-  <div class="section">
-    <div class="section-title">Mapping Presets</div>
-    <div class="btn-row">
-      <button class="btn active" data-preset="expressive">Expressive</button>
-      <button class="btn" data-preset="rhythmic">Rhythmic</button>
-      <button class="btn" data-preset="harmonic">Harmonic</button>
+  <!-- ─── Audio Sensitivity ─── -->
+  <div class="section" id="sec-sens">
+    <div class="section-title" data-toggle>Audio Sensitivity <span class="arrow">▾</span></div>
+    <div class="section-body">
+      <div class="slider-row"><span class="slider-label">Master</span><input type="range" id="sl-master" min="0.2" max="4" value="1.5" step="0.1"><span class="slider-val" id="val-master">1.5</span></div>
+      <div class="slider-row"><span class="slider-label">Smoothing</span><input type="range" id="sl-smooth" min="0.05" max="2" value="0.3" step="0.05"><span class="slider-val" id="val-smooth">0.3s</span></div>
+      <div class="slider-row"><span class="slider-label">Tempo</span><input type="range" id="sl-s-tempo" min="0" max="3" value="1" step="0.1"><span class="slider-val" id="val-s-tempo">1.0</span></div>
+      <div class="slider-row"><span class="slider-label">Dynamics</span><input type="range" id="sl-s-dyn" min="0" max="3" value="1.5" step="0.1"><span class="slider-val" id="val-s-dyn">1.5</span></div>
+      <div class="slider-row"><span class="slider-label">Flux</span><input type="range" id="sl-s-flux" min="0" max="3" value="1.2" step="0.1"><span class="slider-val" id="val-s-flux">1.2</span></div>
+      <div class="slider-row"><span class="slider-label">Density</span><input type="range" id="sl-s-dens" min="0" max="3" value="1" step="0.1"><span class="slider-val" id="val-s-dens">1.0</span></div>
+      <div style="margin-top:4px"><div class="section-title" style="cursor:default;font-size:8px;color:#3a5566;border:none;padding:2px 0">Presets</div></div>
+      <div class="btn-row">
+        <button class="btn active" data-preset="expressive">Expressive</button>
+        <button class="btn" data-preset="rhythmic">Rhythmic</button>
+        <button class="btn" data-preset="harmonic">Harmonic</button>
+      </div>
     </div>
-    <div id="preset-desc">Dynamics &amp; timbral changes drive particle expansion, glow intensity, and turbulence.</div>
   </div>
 
-  <!-- Visual Controls -->
-  <div class="section">
-    <div class="section-title">Visual Controls</div>
+  <!-- ─── Shoal Controls ─── -->
+  <div class="section" id="sec-shoal">
+    <div class="section-title" data-toggle>Shoal Controls <span class="arrow">▾</span></div>
+    <div class="section-body">
+      <div class="slider-row"><span class="slider-label">Shoals</span><input type="range" id="sl-shoals" min="1" max="5" value="2" step="1"><span class="slider-val" id="val-shoals">2</span></div>
+      <div class="slider-row"><span class="slider-label">Fish / Shoal</span><input type="range" id="sl-fish" min="100" max="2000" value="500" step="50"><span class="slider-val" id="val-fish">500</span></div>
+      <div style="margin-top:2px"><div class="section-title" style="cursor:default;font-size:8px;color:#3a5566;border:none;padding:2px 0">Flock Behaviour</div></div>
+      <div class="btn-row">
+        <button class="btn active" data-flock="tight">Tight</button>
+        <button class="btn" data-flock="loose">Loose</button>
+        <button class="btn" data-flock="hunting">Hunting</button>
+      </div>
+    </div>
+  </div>
 
-    <div class="slider-row">
-      <span class="slider-label">Shoals</span>
-      <input type="range" id="sl-shoals" min="1" max="5" value="2" step="1">
-      <span class="slider-val" id="val-shoals">2</span>
+  <!-- ─── Whale Controls ─── -->
+  <div class="section" id="sec-whale">
+    <div class="section-title" data-toggle>Whale Controls <span class="arrow">▾</span></div>
+    <div class="section-body">
+      <div class="check-row"><input type="checkbox" id="chk-whales" checked><label for="chk-whales">Enable Whales</label></div>
+      <div class="slider-row"><span class="slider-label">Count</span><input type="range" id="sl-whales" min="1" max="3" value="2" step="1"><span class="slider-val" id="val-whales">2</span></div>
+      <div class="slider-row"><span class="slider-label">Influence</span><input type="range" id="sl-whale-str" min="0.5" max="5" value="2" step="0.1"><span class="slider-val" id="val-whale-str">2.0</span></div>
     </div>
-    <div class="slider-row">
-      <span class="slider-label">Particles / Shoal</span>
-      <input type="range" id="sl-particles" min="100" max="2000" value="500" step="50">
-      <span class="slider-val" id="val-particles">500</span>
-    </div>
-    <div class="slider-row">
-      <span class="slider-label">Whales</span>
-      <input type="range" id="sl-whales" min="1" max="3" value="2" step="1">
-      <span class="slider-val" id="val-whales">2</span>
-    </div>
-    <div class="slider-row">
-      <span class="slider-label">Sensitivity</span>
-      <input type="range" id="sl-sensitivity" min="0.2" max="5" value="1.5" step="0.1">
-      <span class="slider-val" id="val-sensitivity">1.5</span>
-    </div>
-    <div class="slider-row">
-      <span class="slider-label">Bloom</span>
-      <input type="range" id="sl-bloom" min="0" max="4" value="1.4" step="0.1">
-      <span class="slider-val" id="val-bloom">1.4</span>
-    </div>
+  </div>
 
-    <div style="margin-bottom:8px">
-      <div class="slider-label" style="margin-bottom:4px">Color Scheme</div>
-      <select id="sel-color">
-        <option value="abyssal">Abyssal — Cyan &amp; Deep Blue</option>
-        <option value="coral">Coral — Warm Amber &amp; Pink</option>
-        <option value="polar">Polar — Ice White &amp; Silver</option>
-      </select>
+  <!-- ─── Visual Settings ─── -->
+  <div class="section" id="sec-visual">
+    <div class="section-title" data-toggle>Visual Settings <span class="arrow">▾</span></div>
+    <div class="section-body">
+      <div class="check-row"><input type="checkbox" id="chk-bloom" checked><label for="chk-bloom">Bloom</label></div>
+      <div class="slider-row"><span class="slider-label">Bloom Int.</span><input type="range" id="sl-bloom" min="0" max="2" value="0.5" step="0.05"><span class="slider-val" id="val-bloom">0.5</span></div>
+      <div class="slider-row"><span class="slider-label">Bloom Thresh</span><input type="range" id="sl-bloom-t" min="0" max="1" value="0.3" step="0.05"><span class="slider-val" id="val-bloom-t">0.3</span></div>
+      <div class="slider-row"><span class="slider-label">Brightness</span><input type="range" id="sl-bright" min="0.3" max="2.5" value="1" step="0.05"><span class="slider-val" id="val-bright">1.0</span></div>
+      <div class="check-row"><input type="checkbox" id="chk-godrays" checked><label for="chk-godrays">God Rays</label></div>
+      <div style="margin-top:4px">
+        <select id="sel-color">
+          <option value="abyssal">Abyssal — Cyan &amp; Deep Blue</option>
+          <option value="coral">Coral — Amber &amp; Pink</option>
+          <option value="polar">Polar — Ice White &amp; Silver</option>
+        </select>
+      </div>
     </div>
+  </div>
 
-    <div class="check-row">
-      <input type="checkbox" id="chk-autorotate" checked>
-      <label for="chk-autorotate">Camera Auto-Rotate</label>
-    </div>
-    <div class="check-row">
-      <input type="checkbox" id="chk-godrays" checked>
-      <label for="chk-godrays">God Rays</label>
+  <!-- ─── Camera ─── -->
+  <div class="section" id="sec-cam">
+    <div class="section-title" data-toggle>Camera <span class="arrow">▾</span></div>
+    <div class="section-body">
+      <div class="check-row"><input type="checkbox" id="chk-autorotate" checked><label for="chk-autorotate">Auto-Rotate</label></div>
     </div>
   </div>
 </div>
 
-<!-- ─── Metrics Panel ─── -->
+<!-- ─── Metrics ─── -->
 <div id="metrics-panel">
   <h3>Audio Features</h3>
-  <div class="metric m-tempo">
-    <div class="metric-header"><span class="metric-name">Tempo</span><span class="metric-value" id="mv-tempo">— BPM</span></div>
-    <div class="metric-bar"><div class="metric-fill" id="mf-tempo" style="width:0%"></div></div>
-  </div>
-  <div class="metric m-bright">
-    <div class="metric-header"><span class="metric-name">Brightness</span><span class="metric-value" id="mv-bright">0.00</span></div>
-    <div class="metric-bar"><div class="metric-fill" id="mf-bright" style="width:0%"></div></div>
-  </div>
-  <div class="metric m-dynamics">
-    <div class="metric-header"><span class="metric-name">Dynamics</span><span class="metric-value" id="mv-dynamics">0.00</span></div>
-    <div class="metric-bar"><div class="metric-fill" id="mf-dynamics" style="width:0%"></div></div>
-  </div>
-  <div class="metric m-turb">
-    <div class="metric-header"><span class="metric-name">Turbulence</span><span class="metric-value" id="mv-turb">0.00</span></div>
-    <div class="metric-bar"><div class="metric-fill" id="mf-turb" style="width:0%"></div></div>
-  </div>
-  <div class="metric m-density">
-    <div class="metric-header"><span class="metric-name">Density</span><span class="metric-value" id="mv-density">0.00</span></div>
-    <div class="metric-bar"><div class="metric-fill" id="mf-density" style="width:0%"></div></div>
-  </div>
-  <div class="metric m-complex">
-    <div class="metric-header"><span class="metric-name">Complexity</span><span class="metric-value" id="mv-complex">0.00</span></div>
-    <div class="metric-bar"><div class="metric-fill" id="mf-complex" style="width:0%"></div></div>
-  </div>
+  <div class="metric m-tempo"><div class="metric-header"><span class="metric-name">Tempo</span><span class="metric-value" id="mv-tempo">— BPM</span></div><div class="metric-bar"><div class="metric-fill" id="mf-tempo"></div></div></div>
+  <div class="metric m-bright"><div class="metric-header"><span class="metric-name">Brightness</span><span class="metric-value" id="mv-bright">0.00</span></div><div class="metric-bar"><div class="metric-fill" id="mf-bright"></div></div></div>
+  <div class="metric m-dynamics"><div class="metric-header"><span class="metric-name">Dynamics</span><span class="metric-value" id="mv-dynamics">0.00</span></div><div class="metric-bar"><div class="metric-fill" id="mf-dynamics"></div></div></div>
+  <div class="metric m-turb"><div class="metric-header"><span class="metric-name">Turbulence</span><span class="metric-value" id="mv-turb">0.00</span></div><div class="metric-bar"><div class="metric-fill" id="mf-turb"></div></div></div>
+  <div class="metric m-density"><div class="metric-header"><span class="metric-name">Density</span><span class="metric-value" id="mv-density">0.00</span></div><div class="metric-bar"><div class="metric-fill" id="mf-density"></div></div></div>
+  <div class="metric m-complex"><div class="metric-header"><span class="metric-name">Complexity</span><span class="metric-value" id="mv-complex">0.00</span></div><div class="metric-bar"><div class="metric-fill" id="mf-complex"></div></div></div>
+  <div id="behav-state">Behaviour: <strong>Resting</strong></div>
 </div>
 
 <div id="fps">-- fps</div>
-<div id="instructions">Select an audio source and press <strong style="color:#66ccdd">Start</strong> to begin — the scene responds to live audio</div>
+<div id="instructions">Select an audio source and press <strong style="color:#5599aa">Start</strong> to begin</div>
 <div id="status"></div>
 
-<!-- ─── Three.js import map ─── -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 
-<!-- ─── Meyda (optional, graceful fallback) ─── -->
-<script src="https://unpkg.com/meyda@5.6.3/dist/web/meyda.min.js" onerror="window.__meydaFailed=true"></script>
-
-<!-- ═══════════════════════════════════════════════════════════
-     MAIN APPLICATION MODULE
-     ═══════════════════════════════════════════════════════════ -->
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -280,1445 +248,767 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /* ================================================================
-   1. CONFIGURATION & CONSTANTS
+   CONFIG
    ================================================================ */
-const COLOR_SCHEMES = {
-  abyssal: {
-    shoalColors: [
-      new THREE.Color(0x00ddff),
-      new THREE.Color(0x6699ff),
-      new THREE.Color(0x00ffaa),
-      new THREE.Color(0xccddff),
-      new THREE.Color(0x9966ff),
-    ],
-    whaleCore:  new THREE.Color(0x0a1a2a),
-    whaleGlow:  new THREE.Color(0xff8844),
-    ambient:    new THREE.Color(0x3388aa),
-    background: new THREE.Color(0x000a1a),
-    fogNear:    new THREE.Color(0x001a33),
-    fogFar:     new THREE.Color(0x000a1a),
-    godRay:     new THREE.Color(0xaaddff),
-  },
-  coral: {
-    shoalColors: [
-      new THREE.Color(0xff6644),
-      new THREE.Color(0xffaa33),
-      new THREE.Color(0xff4488),
-      new THREE.Color(0xffcc66),
-      new THREE.Color(0xff8866),
-    ],
-    whaleCore:  new THREE.Color(0x1a0a0a),
-    whaleGlow:  new THREE.Color(0xff4422),
-    ambient:    new THREE.Color(0xaa5533),
-    background: new THREE.Color(0x0a0505),
-    fogNear:    new THREE.Color(0x1a0808),
-    fogFar:     new THREE.Color(0x0a0505),
-    godRay:     new THREE.Color(0xffccaa),
-  },
-  polar: {
-    shoalColors: [
-      new THREE.Color(0xddeeff),
-      new THREE.Color(0xaaccee),
-      new THREE.Color(0xffffff),
-      new THREE.Color(0xbbddff),
-      new THREE.Color(0x99bbdd),
-    ],
-    whaleCore:  new THREE.Color(0x0a1520),
-    whaleGlow:  new THREE.Color(0x88ccff),
-    ambient:    new THREE.Color(0x667788),
-    background: new THREE.Color(0x040810),
-    fogNear:    new THREE.Color(0x0a1520),
-    fogFar:     new THREE.Color(0x040810),
-    godRay:     new THREE.Color(0xddeeff),
-  },
+const SCHEMES = {
+  abyssal:{ fish:[0x00ddff,0x6699ff,0x00ffaa,0xccddff,0x9966ff], whaleGlow:0xff8844, whaleCore:0x061422, ambient:0x3388aa, bg:0x000a1a, fog:0x000a1a, ray:0xaaddff },
+  coral:  { fish:[0xff6644,0xffaa33,0xff4488,0xffcc66,0xff8866], whaleGlow:0xff4422, whaleCore:0x120606, ambient:0xaa5533, bg:0x080404, fog:0x080404, ray:0xffccaa },
+  polar:  { fish:[0xddeeff,0xaaccee,0xffffff,0xbbddff,0x99bbdd], whaleGlow:0x88ccff, whaleCore:0x081018, ambient:0x667788, bg:0x040810, fog:0x040810, ray:0xddeeff },
 };
-
-/* ── PRESETS: dramatically different mapping weights ──
-   Each value is a multiplier for that audio feature's influence.
-   Higher = that feature dominates the visual response.
-*/
-const PRESETS = {
-  expressive: {
-    dynamics: 3.5,    // loudness drives everything
-    turbulence: 3.0,  // timbral change → chaos
-    tempo: 0.5,       // tempo is secondary
-    density: 0.6,
-    brightness: 1.2,
-    complexity: 0.6,
-    desc: 'Dynamics & timbral changes drive particle expansion, glow intensity, and turbulence.',
-  },
-  rhythmic: {
-    dynamics: 1.0,
-    turbulence: 0.4,
-    tempo: 3.5,       // tempo drives speed
-    density: 3.5,     // rhythmic density = particle count
-    brightness: 0.6,
-    complexity: 0.4,
-    desc: 'Beat tempo controls swimming speed. Rhythmic density spawns particles on each onset.',
-  },
-  harmonic: {
-    dynamics: 0.6,
-    turbulence: 0.8,
-    tempo: 0.6,
-    density: 0.5,
-    brightness: 3.5,  // spectral centroid → colour/brightness
-    complexity: 3.5,  // harmonic spread → shoal clustering
-    desc: 'Pitch height shifts colour temperature. Harmonic richness disperses or clusters shoals.',
-  },
+const FLOCK_PRESETS = {
+  tight:  { sep:1.4, ali:1.4, coh:1.8, turbBase:0.15 },
+  loose:  { sep:2.0, ali:0.6, coh:0.5, turbBase:0.4 },
+  hunting:{ sep:1.0, ali:1.8, coh:2.2, turbBase:0.08 },
 };
-
-let currentPreset = { ...PRESETS.expressive };
-let currentScheme = 'abyssal';
-let sensitivity = 1.5;
-
-/* ================================================================
-   2. SHADERS
-   ================================================================ */
-const VignetteShader = {
-  uniforms: {
-    tDiffuse: { value: null },
-    darkness: { value: 0.65 },
-    offset:   { value: 0.4 },
-  },
-  vertexShader: `
-    varying vec2 vUv;
-    void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
-  `,
-  fragmentShader: `
-    uniform sampler2D tDiffuse;
-    uniform float darkness;
-    uniform float offset;
-    varying vec2 vUv;
-    void main(){
-      vec4 c = texture2D(tDiffuse, vUv);
-      float d = distance(vUv, vec2(0.5));
-      float v = smoothstep(offset, offset+0.65, d) * darkness;
-      c.rgb = mix(c.rgb, vec3(0.0, 0.015, 0.04), v);
-      gl_FragColor = c;
-    }
-  `,
+const SENS_PRESETS = {
+  expressive:{ tempo:0.6, dyn:2.5, flux:2.2, dens:0.6 },
+  rhythmic:  { tempo:2.5, dyn:0.8, flux:0.4, dens:2.5 },
+  harmonic:  { tempo:0.6, dyn:0.5, flux:0.8, dens:0.4 },
 };
-
-const WhaleGlowVert = `
-  varying vec3 vNormal;
-  varying vec3 vWorldPos;
-  void main(){
-    vNormal = normalize(normalMatrix * normal);
-    vec4 wp = modelMatrix * vec4(position, 1.0);
-    vWorldPos = wp.xyz;
-    gl_Position = projectionMatrix * viewMatrix * wp;
-  }
-`;
-const WhaleGlowFrag = `
-  uniform vec3 uColor;
-  uniform float uBreath;
-  uniform float uStrength;
-  uniform float uTime;
-  varying vec3 vNormal;
-  varying vec3 vWorldPos;
-  void main(){
-    vec3 viewDir = normalize(cameraPosition - vWorldPos);
-    float fresnel = 1.0 - abs(dot(vNormal, viewDir));
-    float rim = pow(fresnel, 1.8);
-    float center = pow(1.0 - fresnel, 0.5) * 0.35;
-    float glow = (rim * 0.65 + center) * uStrength;
-    glow *= 0.65 + 0.35 * sin(uBreath);
-    float shimmer = sin(vWorldPos.x*3.0+uTime*0.7)*sin(vWorldPos.y*2.5+uTime*0.5)*sin(vWorldPos.z*2.8+uTime*0.6);
-    glow *= 0.85 + 0.15 * shimmer;
-    gl_FragColor = vec4(uColor * glow * 2.2, glow * 0.55);
-  }
-`;
-
-const GodRayVert = `
-  varying vec2 vUv;
-  void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
-`;
-const GodRayFrag = `
-  uniform vec3 uColor;
-  uniform float uOpacity;
-  uniform float uTime;
-  varying vec2 vUv;
-  void main(){
-    float fade = smoothstep(0.0, 0.3, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
-    float edge = smoothstep(0.0, 0.3, vUv.x) * smoothstep(1.0, 0.7, vUv.x);
-    float flicker = 0.85 + 0.15 * sin(uTime * 0.3 + vUv.y * 4.0);
-    float a = fade * edge * uOpacity * flicker;
-    gl_FragColor = vec4(uColor, a * 0.15);
-  }
-`;
-
-/* ================================================================
-   3. SPATIAL GRID — O(n) neighbor queries for boid flocking
-   ================================================================ */
-class SpatialGrid {
-  constructor(cellSize) {
-    this.cellSize = cellSize;
-    this.inv = 1 / cellSize;
-    this.cells = new Map();
-  }
-  clear() { this.cells.clear(); }
-  _key(x, y, z) {
-    return ((x * 92837111) ^ (y * 689287499) ^ (z * 283923481)) | 0;
-  }
-  insert(px, py, pz, idx) {
-    const cx = Math.floor(px * this.inv);
-    const cy = Math.floor(py * this.inv);
-    const cz = Math.floor(pz * this.inv);
-    const k = this._key(cx, cy, cz);
-    let arr = this.cells.get(k);
-    if (!arr) { arr = []; this.cells.set(k, arr); }
-    arr.push(idx);
-  }
-  query(px, py, pz, results) {
-    results.length = 0;
-    const cx = Math.floor(px * this.inv);
-    const cy = Math.floor(py * this.inv);
-    const cz = Math.floor(pz * this.inv);
-    for (let dx = -1; dx <= 1; dx++)
-      for (let dy = -1; dy <= 1; dy++)
-        for (let dz = -1; dz <= 1; dz++) {
-          const arr = this.cells.get(this._key(cx+dx, cy+dy, cz+dz));
-          if (arr) for (let i = 0; i < arr.length; i++) results.push(arr[i]);
-        }
-  }
-}
-
-/* ================================================================
-   4. AUDIO ANALYZER — COMPLETELY REWORKED for responsiveness
-   Key fixes:
-   - AnalyserNode smoothingTimeConstant lowered to 0.4
-   - Adaptive normalizer decays fast (0.993) so it tracks current dynamics
-   - Feature smoothing is fast (0.25–0.4) for snappy response
-   - Raw RMS and waveform exposed for VU meter
-   - Onset density bug fixed (only counts actual onsets)
-   ================================================================ */
-class AudioAnalyzer {
-  constructor() {
-    this.ctx = null;
-    this.analyser = null;
-    this.source = null;
-    this._stream = null;  // store MediaStream directly for reliable cleanup
-    this.running = false;
-
-    this.freqData = null;
-    this.timeData = null;
-    this.prevFreq = null;
-
-    // Smoothed 0–1 features
-    this.features = {
-      tempo: 0, brightness: 0.5, dynamics: 0,
-      turbulence: 0, density: 0, complexity: 0.3,
-    };
-    this.rawBPM = 120;
-
-    // Raw values for VU meter
-    this.rawRMS = 0;
-    this.rawDB = -Infinity;
-    this.peakDB = -60;
-
-    // Per-feature adaptive smoothers
-    this._sm = {};
-    ['brightness','dynamics','turbulence','density','complexity'].forEach(k => {
-      this._sm[k] = { value: 0, max: 0.01, min: 0 };
-    });
-
-    // Onset / BPM
-    this._energyHist = [];
-    this._onsetTimes = [];
-    this._onsetCooldown = 0;
-    this._recentOnsets = [];
-
-    this.audioEl = null;
-  }
-
-  async init(mode) {
-    this.stop();
-    try {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-      // CRITICAL: Resume context — browsers start it suspended.
-      // File mode gets away with this because audioEl.play() implicitly resumes,
-      // but mic/system modes produce silence without an explicit resume.
-      if (this.ctx.state === 'suspended') {
-        await this.ctx.resume();
-      }
-      console.log('[Audio] Context state after resume:', this.ctx.state, '| Sample rate:', this.ctx.sampleRate);
-
-      this.analyser = this.ctx.createAnalyser();
-      this.analyser.fftSize = 2048;
-      this.analyser.smoothingTimeConstant = 0.4;
-      this.analyser.minDecibels = -90;
-      this.analyser.maxDecibels = -10;
-
-      const bufLen = this.analyser.frequencyBinCount;
-      this.freqData = new Uint8Array(bufLen);
-      this.timeData = new Uint8Array(this.analyser.fftSize);
-      this.prevFreq = new Float32Array(bufLen);
-
-      if (mode === 'mic') {
-        // Try with processing disabled first (best for instruments),
-        // fall back to basic { audio: true } if constraints not supported
-        let stream;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              echoCancellation: false,
-              noiseSuppression: false,
-              autoGainControl: false,
-            }
-          });
-        } catch (constraintErr) {
-          console.warn('[Audio] Advanced constraints failed, trying basic:', constraintErr);
-          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        }
-        this._stream = stream;
-        this.source = this.ctx.createMediaStreamSource(stream);
-        this.source.connect(this.analyser);
-        console.log('[Audio] Mic connected — tracks:', stream.getAudioTracks().map(t => t.label));
-
-      } else if (mode === 'file') {
-        if (!this.audioEl) throw new Error('No audio file selected');
-        this.source = this.ctx.createMediaElementSource(this.audioEl);
-        this.source.connect(this.analyser);
-        this.analyser.connect(this.ctx.destination);
-        this.audioEl.play();
-
-      } else if (mode === 'system') {
-        // getDisplayMedia requires video:true on most browsers;
-        // we keep the video track alive (some browsers kill audio if video stops)
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: true,
-        });
-        this._stream = stream;
-        this.source = this.ctx.createMediaStreamSource(stream);
-        this.source.connect(this.analyser);
-
-        // If no audio track was shared, warn the user
-        if (stream.getAudioTracks().length === 0) {
-          showStatus('No audio track — make sure to check "Share audio" in the dialog', true);
-        } else {
-          console.log('[Audio] System audio connected — tracks:', stream.getAudioTracks().map(t => t.label));
-        }
-      }
-
-      // Double-check context is running
-      if (this.ctx.state !== 'running') {
-        await this.ctx.resume();
-        console.log('[Audio] Second resume attempt, state:', this.ctx.state);
-      }
-
-      this.running = true;
-      Object.values(this._sm).forEach(s => { s.value = 0; s.max = 0.01; s.min = 0; });
-      this._energyHist = [];
-      this._onsetTimes = [];
-      this._recentOnsets = [];
-      this.rawBPM = 120;
-      return true;
-    } catch(e) {
-      console.error('[Audio] Init failed:', e);
-      showStatus(e.message || 'Audio initialization failed', true);
-      return false;
-    }
-  }
-
-  stop() {
-    if (this.audioEl) { this.audioEl.pause(); }
-    // Stop all tracks on the stored stream (mic / system)
-    if (this._stream) {
-      this._stream.getTracks().forEach(t => t.stop());
-      this._stream = null;
-    }
-    if (this.source) {
-      try { this.source.disconnect(); } catch(e){}
-      this.source = null;
-    }
-    if (this.ctx && this.ctx.state !== 'closed') { try { this.ctx.close(); } catch(e){} }
-    this.ctx = null; this.analyser = null; this.running = false;
-    this.rawRMS = 0; this.rawDB = -Infinity;
-  }
-
-  setAudioElement(el) { this.audioEl = el; }
-
-  /* Fast adaptive normalizer with quick decay */
-  _smooth(key, raw, speed = 0.3) {
-    const s = this._sm[key];
-    // Max decays toward current value quickly so sensitivity stays high
-    s.max = Math.max(s.max * 0.993, Math.abs(raw) + 0.001);
-    s.min = s.min * 0.998; // min slowly drifts toward 0
-    const range = s.max - s.min;
-    const norm = range > 0.001 ? Math.min(1, Math.max(0, (Math.abs(raw) - s.min) / range)) : 0;
-    // Asymmetric smoothing: attack fast, release slower
-    const alpha = norm > s.value ? speed * 1.5 : speed * 0.5;
-    s.value += (norm - s.value) * alpha;
-    return s.value;
-  }
-
-  update(timestamp) {
-    if (!this.running || !this.analyser) return;
-    this.analyser.getByteFrequencyData(this.freqData);
-    this.analyser.getByteTimeDomainData(this.timeData);
-
-    const freq = this.freqData;
-    const time = this.timeData;
-    const N = freq.length;
-    const sr = this.ctx.sampleRate;
-
-    // ── RMS ──
-    let rmsSum = 0;
-    for (let i = 0; i < time.length; i++) {
-      const v = (time[i] - 128) / 128;
-      rmsSum += v * v;
-    }
-    const rms = Math.sqrt(rmsSum / time.length);
-    this.rawRMS = rms;
-    this.rawDB = rms > 0 ? 20 * Math.log10(rms) : -90;
-    this.peakDB = Math.max(this.peakDB * 0.995, this.rawDB);
-
-    // ── Spectral Centroid ──
-    let wSum = 0, fSum = 0;
-    for (let i = 0; i < N; i++) {
-      wSum += freq[i] * i;
-      fSum += freq[i];
-    }
-    const centroid = fSum > 0 ? (wSum / fSum) * (sr / 2 / N) : 0;
-
-    // ── Spectral Flux (half-wave rectified diff) ──
-    let flux = 0;
-    for (let i = 0; i < N; i++) {
-      const d = freq[i] - this.prevFreq[i];
-      if (d > 0) flux += d;
-      this.prevFreq[i] = freq[i];
-    }
-
-    // ── Spectral Spread ──
-    const meanBin = fSum > 0 ? wSum / fSum : N / 2;
-    let spreadSum = 0;
-    for (let i = 0; i < N; i++) {
-      const diff = i - meanBin;
-      spreadSum += freq[i] * diff * diff;
-    }
-    const spread = fSum > 0 ? Math.sqrt(spreadSum / fSum) : 0;
-
-    // ── Onset Detection & BPM ──
-    this._energyHist.push(rms);
-    if (this._energyHist.length > 30) this._energyHist.shift(); // ~0.5s window at 60fps
-
-    if (this._onsetCooldown > 0) this._onsetCooldown--;
-
-    let isOnset = false;
-    if (this._energyHist.length >= 6) {
-      const avg = this._energyHist.reduce((a,b) => a+b, 0) / this._energyHist.length;
-      if (rms > avg * 1.5 + 0.01 && this._onsetCooldown === 0) {
-        isOnset = true;
-        this._onsetCooldown = 5;
-        this._onsetTimes.push(timestamp);
-        // BPM: keep 8s window of onsets
-        const cutoff = timestamp - 8000;
-        this._onsetTimes = this._onsetTimes.filter(t => t > cutoff);
-        if (this._onsetTimes.length >= 3) {
-          const intervals = [];
-          for (let i = 1; i < this._onsetTimes.length; i++) {
-            intervals.push(this._onsetTimes[i] - this._onsetTimes[i-1]);
-          }
-          intervals.sort((a,b) => a - b);
-          const median = intervals[Math.floor(intervals.length / 2)];
-          if (median > 150 && median < 3000) {
-            this.rawBPM = this.rawBPM * 0.8 + (60000 / median) * 0.2;
-          }
-        }
-      }
-    }
-
-    // ── Onset density: count ACTUAL onsets in 3s window (BUG FIX) ──
-    if (isOnset) this._recentOnsets.push(timestamp);
-    const densityCutoff = timestamp - 3000;
-    this._recentOnsets = this._recentOnsets.filter(t => t > densityCutoff);
-    const onsetDensity = this._recentOnsets.length / 3; // onsets per second
-
-    // ── Store smoothed features ──
-    // Fast attack/release for responsive feel
-    this.features.dynamics   = this._smooth('dynamics',   rms,             0.4);
-    this.features.brightness = this._smooth('brightness', centroid / 3000, 0.3);
-    this.features.turbulence = this._smooth('turbulence', flux / 500,      0.35);
-    this.features.complexity = this._smooth('complexity', spread / 150,    0.2);
-    this.features.density    = this._smooth('density',    onsetDensity / 4, 0.3);
-    this.features.tempo      = Math.max(40, Math.min(220, this.rawBPM));
-  }
-
-  getFeatures() { return this.features; }
-
-  /* Draw waveform onto the VU canvas */
-  drawVU(vuCtx, w, h) {
-    vuCtx.clearRect(0, 0, w, h);
-
-    if (!this.running || !this.timeData) {
-      // No-signal pattern
-      vuCtx.strokeStyle = 'rgba(50,120,150,0.2)';
-      vuCtx.lineWidth = 1;
-      vuCtx.beginPath();
-      vuCtx.moveTo(0, h/2);
-      vuCtx.lineTo(w, h/2);
-      vuCtx.stroke();
-      return;
-    }
-
-    const data = this.timeData;
-    const len = data.length;
-    const step = Math.ceil(len / w);
-
-    // Waveform fill (gradient based on level)
-    const level = Math.min(1, this.rawRMS * 4);
-    const r = Math.floor(30 + level * 200);
-    const g = Math.floor(180 - level * 80);
-    const b = Math.floor(200 - level * 100);
-
-    // Glow underneath
-    const gradient = vuCtx.createLinearGradient(0, 0, 0, h);
-    gradient.addColorStop(0, `rgba(${r},${g},${b},0.0)`);
-    gradient.addColorStop(0.5, `rgba(${r},${g},${b},${0.15 + level * 0.35})`);
-    gradient.addColorStop(1, `rgba(${r},${g},${b},0.0)`);
-
-    vuCtx.fillStyle = gradient;
-    vuCtx.beginPath();
-    vuCtx.moveTo(0, h/2);
-    for (let x = 0; x < w; x++) {
-      const idx = Math.min(len - 1, x * step);
-      const v = (data[idx] - 128) / 128;
-      vuCtx.lineTo(x, h/2 - v * h * 0.45);
-    }
-    vuCtx.lineTo(w, h/2);
-    for (let x = w - 1; x >= 0; x--) {
-      const idx = Math.min(len - 1, x * step);
-      const v = (data[idx] - 128) / 128;
-      vuCtx.lineTo(x, h/2 + v * h * 0.45 * 0.3);
-    }
-    vuCtx.closePath();
-    vuCtx.fill();
-
-    // Waveform line
-    vuCtx.strokeStyle = `rgba(${r},${g},${b},${0.6 + level * 0.4})`;
-    vuCtx.lineWidth = 1.5 + level;
-    vuCtx.beginPath();
-    for (let x = 0; x < w; x++) {
-      const idx = Math.min(len - 1, x * step);
-      const v = (data[idx] - 128) / 128;
-      const y = h/2 - v * h * 0.45;
-      x === 0 ? vuCtx.moveTo(x, y) : vuCtx.lineTo(x, y);
-    }
-    vuCtx.stroke();
-  }
-}
-
-/* ================================================================
-   5. SHOAL — Boid flocking with AMPLIFIED audio reactivity
-   ================================================================ */
-class Shoal {
-  constructor(count, colorIndex, scene) {
-    this.maxCount = count;
-    this.activeCount = count;
-    this.colorIndex = colorIndex;
-    this.scene = scene;
-    this.baseColor = new THREE.Color();
-
-    this.px = new Float32Array(count);
-    this.py = new Float32Array(count);
-    this.pz = new Float32Array(count);
-    this.vx = new Float32Array(count);
-    this.vy = new Float32Array(count);
-    this.vz = new Float32Array(count);
-
-    this.perceptionRadius = 3.5;
-    this.maxSpeed = 2.5;
-    this.maxForce = 0.8;
-    this.separationWeight = 1.6;
-    this.alignmentWeight = 1.0;
-    this.cohesionWeight = 1.0;
-    this.avoidanceWeight = 4.0;
-    this.turbulenceWeight = 0.5;
-    this.bounds = 22;
-
-    this.grid = new SpatialGrid(this.perceptionRadius);
-    this._neighbors = [];
-
-    const cx = (Math.random() - 0.5) * 16;
-    const cy = (Math.random() - 0.5) * 8;
-    const cz = (Math.random() - 0.5) * 16;
-    for (let i = 0; i < count; i++) {
-      this.px[i] = cx + (Math.random() - 0.5) * 8;
-      this.py[i] = cy + (Math.random() - 0.5) * 8;
-      this.pz[i] = cz + (Math.random() - 0.5) * 8;
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 0.5 + Math.random() * 0.5;
-      this.vx[i] = Math.cos(angle) * speed;
-      this.vy[i] = (Math.random() - 0.5) * 0.5;
-      this.vz[i] = Math.sin(angle) * speed;
-    }
-    this._createMesh(count);
-  }
-
-  _createMesh(count) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 64; canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0, 'rgba(255,255,255,1.0)');
-    grad.addColorStop(0.12, 'rgba(255,255,255,0.9)');
-    grad.addColorStop(0.4, 'rgba(255,255,255,0.3)');
-    grad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 64, 64);
-    const tex = new THREE.CanvasTexture(canvas);
-
-    this.geometry = new THREE.BufferGeometry();
-    this.posAttr = new THREE.BufferAttribute(new Float32Array(count * 3), 3);
-    this.posAttr.usage = THREE.DynamicDrawUsage;
-    this.colAttr = new THREE.BufferAttribute(new Float32Array(count * 3), 3);
-    this.colAttr.usage = THREE.DynamicDrawUsage;
-    this.geometry.setAttribute('position', this.posAttr);
-    this.geometry.setAttribute('color', this.colAttr);
-
-    this.material = new THREE.PointsMaterial({
-      map: tex,
-      size: 0.4,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      vertexColors: true,
-      sizeAttenuation: true,
-      depthWrite: false,
-      opacity: 0.9,
-    });
-
-    this.points = new THREE.Points(this.geometry, this.material);
-    this.points.frustumCulled = false;
-    this.scene.add(this.points);
-    this._setBaseColors();
-  }
-
-  _setBaseColors() {
-    const scheme = COLOR_SCHEMES[currentScheme];
-    this.baseColor.copy(scheme.shoalColors[this.colorIndex % scheme.shoalColors.length]);
-    const arr = this.colAttr.array;
-    for (let i = 0; i < this.maxCount; i++) {
-      const vary = 0.85 + Math.random() * 0.3;
-      arr[i*3]   = this.baseColor.r * vary;
-      arr[i*3+1] = this.baseColor.g * vary;
-      arr[i*3+2] = this.baseColor.b * vary;
-    }
-    this.colAttr.needsUpdate = true;
-  }
-
-  updateColors() { this._setBaseColors(); }
-
-  update(features, whales, dt, elapsed) {
-    if (dt > 0.1) dt = 0.1;
-    const sens = sensitivity;
-    const p = currentPreset;
-
-    // ═══ AUDIO → VISUAL MAPPINGS ═══
-
-    // TEMPO → Swimming speed (massive range: 0.3x to 3x)
-    const speedMult = 0.3 + (features.tempo / 100) * 1.0 * p.tempo * sens;
-
-    // TURBULENCE → Chaos / random perturbation (0 to very high)
-    const turbMult = features.turbulence * p.turbulence * sens;
-
-    // DYNAMICS → Spatial expansion AND brightness
-    const dynamicsVal = features.dynamics * p.dynamics * sens;
-    const dynamicsScale = 1.0 + dynamicsVal * 2.5;
-
-    // COMPLEXITY → Cohesion (complex = dispersed, simple = tight)
-    const complexVal = features.complexity * p.complexity * sens;
-    const cohesionMod = Math.max(0.1, 1.0 - complexVal * 0.8);
-
-    // BRIGHTNESS → Colour intensity boost
-    const brightnessVal = features.brightness * p.brightness * sens;
-
-    // DENSITY → Active particle count
-    const targetActive = Math.max(30, Math.floor(
-      this.maxCount * (0.15 + 0.85 * Math.min(1, 0.2 + features.density * p.density * sens * 0.8))
-    ));
-    const step = Math.max(1, Math.min(20, Math.abs(targetActive - this.activeCount)));
-    this.activeCount += Math.sign(targetActive - this.activeCount) * step;
-    this.activeCount = Math.max(30, Math.min(this.maxCount, this.activeCount));
-    const NC = this.activeCount;
-
-    const curMaxSpeed = this.maxSpeed * speedMult;
-    const curMaxForce = this.maxForce * Math.max(0.5, speedMult);
-    const curPerception = this.perceptionRadius * dynamicsScale;
-    const cohW = this.cohesionWeight * cohesionMod;
-
-    // Build grid
-    this.grid.clear();
-    for (let i = 0; i < NC; i++) {
-      this.grid.insert(this.px[i], this.py[i], this.pz[i], i);
-    }
-
-    let sx, sy, sz, ax, ay, az, cx, cy, cz;
-    let sepCount, aliCount, cohCount;
-
-    for (let i = 0; i < NC; i++) {
-      const bx = this.px[i], by = this.py[i], bz = this.pz[i];
-      const bvx = this.vx[i], bvy = this.vy[i], bvz = this.vz[i];
-      sx=0;sy=0;sz=0; ax=0;ay=0;az=0; cx=0;cy=0;cz=0;
-      sepCount=0; aliCount=0; cohCount=0;
-
-      this.grid.query(bx, by, bz, this._neighbors);
-      const percSq = curPerception * curPerception;
-      const sepDist = curPerception * 0.45;
-      const sepSq = sepDist * sepDist;
-
-      for (let j = 0; j < this._neighbors.length; j++) {
-        const ni = this._neighbors[j];
-        if (ni === i) continue;
-        const dx = bx - this.px[ni], dy = by - this.py[ni], dz = bz - this.pz[ni];
-        const distSq = dx*dx + dy*dy + dz*dz;
-        if (distSq < percSq && distSq > 0.0001) {
-          ax += this.vx[ni]; ay += this.vy[ni]; az += this.vz[ni]; aliCount++;
-          cx += this.px[ni]; cy += this.py[ni]; cz += this.pz[ni]; cohCount++;
-          if (distSq < sepSq) {
-            const inv = 1 / (Math.sqrt(distSq) + 0.01);
-            sx += dx * inv; sy += dy * inv; sz += dz * inv; sepCount++;
-          }
-        }
-      }
-
-      let forceX = 0, forceY = 0, forceZ = 0;
-
-      if (sepCount > 0) {
-        sx /= sepCount; sy /= sepCount; sz /= sepCount;
-        const sm = Math.sqrt(sx*sx+sy*sy+sz*sz) || 1;
-        forceX += (sx/sm * curMaxSpeed - bvx) * this.separationWeight;
-        forceY += (sy/sm * curMaxSpeed - bvy) * this.separationWeight;
-        forceZ += (sz/sm * curMaxSpeed - bvz) * this.separationWeight;
-      }
-      if (aliCount > 0) {
-        ax /= aliCount; ay /= aliCount; az /= aliCount;
-        const am = Math.sqrt(ax*ax+ay*ay+az*az) || 1;
-        forceX += (ax/am * curMaxSpeed - bvx) * this.alignmentWeight;
-        forceY += (ay/am * curMaxSpeed - bvy) * this.alignmentWeight;
-        forceZ += (az/am * curMaxSpeed - bvz) * this.alignmentWeight;
-      }
-      if (cohCount > 0) {
-        cx /= cohCount; cy /= cohCount; cz /= cohCount;
-        let dx2 = cx - bx, dy2 = cy - by, dz2 = cz - bz;
-        const cm = Math.sqrt(dx2*dx2+dy2*dy2+dz2*dz2) || 1;
-        forceX += (dx2/cm * curMaxSpeed - bvx) * cohW;
-        forceY += (dy2/cm * curMaxSpeed - bvy) * cohW;
-        forceZ += (dz2/cm * curMaxSpeed - bvz) * cohW;
-      }
-
-      // Whale avoidance
-      for (let w = 0; w < whales.length; w++) {
-        const whale = whales[w];
-        const dx = bx - whale.position.x, dy = by - whale.position.y, dz = bz - whale.position.z;
-        const distSq = dx*dx + dy*dy + dz*dz;
-        const fieldR = whale.displacementRadius;
-        if (distSq < fieldR * fieldR && distSq > 0.01) {
-          const dist = Math.sqrt(distSq);
-          const str = (1 - dist / fieldR) * whale.displacementStrength;
-          forceX += (dx/dist)*str*this.avoidanceWeight;
-          forceY += (dy/dist)*str*this.avoidanceWeight;
-          forceZ += (dz/dist)*str*this.avoidanceWeight;
-        }
-      }
-
-      // TURBULENCE: dramatic random perturbation when audio is turbulent
-      const turbAmt = (0.08 + turbMult * 3.0) * this.turbulenceWeight;
-      forceX += (Math.random()-0.5) * turbAmt * curMaxSpeed;
-      forceY += (Math.random()-0.5) * turbAmt * curMaxSpeed * 0.7;
-      forceZ += (Math.random()-0.5) * turbAmt * curMaxSpeed;
-
-      // Boundaries
-      const bound = this.bounds, margin = 4, bStr = 1.0;
-      if (bx > bound-margin)  forceX -= (bx-bound+margin)*bStr;
-      if (bx < -bound+margin) forceX -= (bx+bound-margin)*bStr;
-      if (by > bound*0.6-margin)  forceY -= (by-bound*0.6+margin)*bStr;
-      if (by < -bound*0.6+margin) forceY -= (by+bound*0.6-margin)*bStr;
-      if (bz > bound-margin)  forceZ -= (bz-bound+margin)*bStr;
-      if (bz < -bound+margin) forceZ -= (bz+bound-margin)*bStr;
-
-      // Clamp force
-      const fMag = Math.sqrt(forceX*forceX+forceY*forceY+forceZ*forceZ);
-      if (fMag > curMaxForce) {
-        const s = curMaxForce / fMag;
-        forceX *= s; forceY *= s; forceZ *= s;
-      }
-
-      this.vx[i] += forceX * dt;
-      this.vy[i] += forceY * dt;
-      this.vz[i] += forceZ * dt;
-
-      const spd = Math.sqrt(this.vx[i]**2+this.vy[i]**2+this.vz[i]**2);
-      if (spd > curMaxSpeed) {
-        const s = curMaxSpeed / spd;
-        this.vx[i]*=s; this.vy[i]*=s; this.vz[i]*=s;
-      }
-      if (spd < curMaxSpeed * 0.08) {
-        this.vx[i] += (Math.random()-0.5)*0.15;
-        this.vz[i] += (Math.random()-0.5)*0.15;
-      }
-
-      this.px[i] += this.vx[i] * dt;
-      this.py[i] += this.vy[i] * dt;
-      this.pz[i] += this.vz[i] * dt;
-    }
-
-    // Transfer to GPU
-    const pos = this.posAttr.array;
-    for (let i = 0; i < this.maxCount; i++) {
-      if (i < NC) {
-        pos[i*3]=this.px[i]; pos[i*3+1]=this.py[i]; pos[i*3+2]=this.pz[i];
-      } else {
-        pos[i*3]=9999; pos[i*3+1]=9999; pos[i*3+2]=9999;
-      }
-    }
-    this.posAttr.needsUpdate = true;
-
-    // ═══ COLOUR MODULATION: brightness shifts particle colour intensity per frame ═══
-    const colorArr = this.colAttr.array;
-    const brightBoost = 1.0 + brightnessVal * 1.5 + dynamicsVal * 1.0;
-    const bc = this.baseColor;
-    for (let i = 0; i < NC; i++) {
-      // Per-particle subtle variation stays, but brightness modulates all
-      const base = 0.7 + (Math.sin(i * 1.37 + elapsed * 0.5) * 0.15 + 0.15);
-      colorArr[i*3]   = Math.min(1.5, bc.r * base * brightBoost);
-      colorArr[i*3+1] = Math.min(1.5, bc.g * base * brightBoost);
-      colorArr[i*3+2] = Math.min(1.5, bc.b * base * brightBoost);
-    }
-    this.colAttr.needsUpdate = true;
-
-    // PARTICLE SIZE: dramatic response to dynamics (0.15 quiet → 1.2 loud)
-    this.material.size = 0.15 + dynamicsVal * 0.6 + brightnessVal * 0.15 + 0.1;
-    this.material.opacity = 0.5 + Math.min(0.5, dynamicsVal * 0.5);
-  }
-
-  dispose() {
-    this.scene.remove(this.points);
-    this.geometry.dispose();
-    this.material.map.dispose();
-    this.material.dispose();
-  }
-}
-
-/* ================================================================
-   6. WHALE — AMPLIFIED audio reactivity
-   ================================================================ */
-class Whale {
-  constructor(config, scene) {
-    this.scene = scene;
-    this.position = new THREE.Vector3();
-    this.velocity = new THREE.Vector3();
-    this.scale = config.scale || 3;
-    this.baseDisplacementRadius = (config.displacementRadius || 8) * this.scale * 0.5;
-    this.displacementRadius = this.baseDisplacementRadius;
-    this.displacementStrength = config.displacementStrength || 2.5;
-    this.breathPeriod = config.breathPeriod || 8 + Math.random() * 4;
-    this.breathPhase = Math.random() * Math.PI * 2;
-    this.pathSpeed = config.pathSpeed || 0.03;
-    this.pathProgress = config.phaseOffset || 0;
-
-    const pts = [];
-    const nPts = 8;
-    const r = config.pathRadius || 18;
-    const rVar = r * 0.35;
-    const hVar = config.pathHeight || 3;
-    const yOff = config.yOffset || 0;
-    for (let i = 0; i < nPts; i++) {
-      const t = (i / nPts) * Math.PI * 2;
-      const radius = r + Math.sin(t * 2 + config.seed * 5) * rVar;
-      pts.push(new THREE.Vector3(
-        Math.cos(t) * radius,
-        yOff + Math.sin(t * 3 + config.seed * 3) * hVar,
-        Math.sin(t) * radius
-      ));
-    }
-    this.path = new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.5);
-    this._createMesh();
-    this.position.copy(this.path.getPointAt(0));
-  }
-
-  _createMesh() {
-    const scheme = COLOR_SCHEMES[currentScheme];
-    const coreGeo = new THREE.IcosahedronGeometry(1, 3);
-    this.coreMat = new THREE.MeshBasicMaterial({
-      color: scheme.whaleCore, transparent: true, opacity: 0.15, depthWrite: false,
-    });
-    this.coreMesh = new THREE.Mesh(coreGeo, this.coreMat);
-    this.coreMesh.scale.setScalar(this.scale * 0.8);
-
-    const glowGeo = new THREE.IcosahedronGeometry(1, 4);
-    this.glowMat = new THREE.ShaderMaterial({
-      vertexShader: WhaleGlowVert,
-      fragmentShader: WhaleGlowFrag,
-      uniforms: {
-        uColor: { value: scheme.whaleGlow.clone() },
-        uBreath: { value: 0 },
-        uStrength: { value: 0.6 },
-        uTime: { value: 0 },
-      },
-      transparent: true, blending: THREE.AdditiveBlending,
-      depthWrite: false, side: THREE.FrontSide,
-    });
-    this.glowMesh = new THREE.Mesh(glowGeo, this.glowMat);
-    this.glowMesh.scale.setScalar(this.scale * 1.8);
-
-    this.group = new THREE.Group();
-    this.group.add(this.coreMesh);
-    this.group.add(this.glowMesh);
-    this.scene.add(this.group);
-  }
-
-  update(features, dt, elapsed) {
-    const p = currentPreset;
-    const sens = sensitivity;
-
-    // TEMPO → path speed (dramatic range)
-    const tempoFactor = 0.3 + (features.tempo / 100) * 0.8 * p.tempo * sens;
-    this.pathProgress += this.pathSpeed * dt * tempoFactor;
-    if (this.pathProgress > 1) this.pathProgress -= 1;
-
-    const target = this.path.getPointAt(this.pathProgress % 1);
-    const prevPos = this.position.clone();
-    this.position.lerp(target, 0.02 + dt * 0.5);
-    this.velocity.subVectors(this.position, prevPos);
-
-    const breathVal = Math.sin(elapsed * (Math.PI * 2 / this.breathPeriod) + this.breathPhase);
-
-    // DYNAMICS → displacement field strength AND glow (BIG response)
-    const dynVal = features.dynamics * p.dynamics * sens;
-    this.displacementStrength = 1.5 + dynVal * 5.0;
-    this.displacementRadius = this.baseDisplacementRadius * (1 + dynVal * 0.5);
-
-    this.group.position.copy(this.position);
-
-    if (this.velocity.lengthSq() > 0.00001) {
-      const dir = this.velocity.clone().normalize();
-      const angle = Math.atan2(dir.x, dir.z);
-      this.group.rotation.y += (angle - this.group.rotation.y) * 0.02;
-    }
-
-    // Scale: dynamics pulses the whale visibly
-    const breathScale = 1.0 + breathVal * 0.1;
-    const dynScale = 1.0 + dynVal * 0.4;
-    this.coreMesh.scale.setScalar(this.scale * 0.8 * breathScale * dynScale);
-    this.glowMesh.scale.setScalar(this.scale * (1.6 + dynVal * 1.0) * breathScale);
-
-    // GLOW STRENGTH: from subtle to blazing based on dynamics
-    this.glowMat.uniforms.uBreath.value = breathVal * Math.PI;
-    this.glowMat.uniforms.uStrength.value = 0.25 + dynVal * 1.5 + breathVal * 0.15;
-    this.glowMat.uniforms.uTime.value = elapsed;
-
-    this.coreMat.opacity = 0.08 + dynVal * 0.25;
-  }
-
-  updateScheme() {
-    const scheme = COLOR_SCHEMES[currentScheme];
-    this.coreMat.color.copy(scheme.whaleCore);
-    this.glowMat.uniforms.uColor.value.copy(scheme.whaleGlow);
-  }
-
-  dispose() {
-    this.scene.remove(this.group);
-    this.coreMesh.geometry.dispose(); this.coreMat.dispose();
-    this.glowMesh.geometry.dispose(); this.glowMat.dispose();
-  }
-}
-
-/* ================================================================
-   7. ENVIRONMENT
-   ================================================================ */
-class Environment {
-  constructor(scene) {
-    this.scene = scene;
-    this.godRays = [];
-    this.ambientPoints = null;
-    this._createGodRays();
-    this._createAmbientParticles();
-    this._createCausticsFloor();
-  }
-
-  _createGodRays() {
-    const scheme = COLOR_SCHEMES[currentScheme];
-    for (let i = 0; i < 7; i++) {
-      const width = 1.5 + Math.random() * 3;
-      const height = 35 + Math.random() * 20;
-      const geo = new THREE.PlaneGeometry(width, height);
-      const mat = new THREE.ShaderMaterial({
-        vertexShader: GodRayVert, fragmentShader: GodRayFrag,
-        uniforms: {
-          uColor: { value: scheme.godRay.clone() },
-          uOpacity: { value: 0.6 + Math.random() * 0.4 },
-          uTime: { value: Math.random() * 100 },
-        },
-        transparent: true, blending: THREE.AdditiveBlending,
-        depthWrite: false, side: THREE.DoubleSide,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set((Math.random()-0.5)*50, 12+Math.random()*8, (Math.random()-0.5)*50);
-      mesh.rotation.set(-0.15+Math.random()*0.3, Math.random()*Math.PI, (Math.random()-0.5)*0.2);
-      this.scene.add(mesh);
-      this.godRays.push({ mesh, mat, baseX: mesh.position.x, phase: Math.random()*Math.PI*2 });
-    }
-  }
-
-  _createAmbientParticles() {
-    const count = 600;
-    const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const scheme = COLOR_SCHEMES[currentScheme];
-    for (let i = 0; i < count; i++) {
-      positions[i*3]=(Math.random()-0.5)*60;
-      positions[i*3+1]=(Math.random()-0.5)*40;
-      positions[i*3+2]=(Math.random()-0.5)*60;
-      const v = 0.5+Math.random()*0.5;
-      colors[i*3]=scheme.ambient.r*v; colors[i*3+1]=scheme.ambient.g*v; colors[i*3+2]=scheme.ambient.b*v;
-    }
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    const canvas = document.createElement('canvas');
-    canvas.width=32; canvas.height=32;
-    const ctx = canvas.getContext('2d');
-    const grad = ctx.createRadialGradient(16,16,0,16,16,16);
-    grad.addColorStop(0,'rgba(255,255,255,0.6)');
-    grad.addColorStop(1,'rgba(255,255,255,0.0)');
-    ctx.fillStyle=grad; ctx.fillRect(0,0,32,32);
-
-    this.ambientMat = new THREE.PointsMaterial({
-      map: new THREE.CanvasTexture(canvas), size: 0.12, transparent: true,
-      blending: THREE.AdditiveBlending, vertexColors: true,
-      sizeAttenuation: true, depthWrite: false, opacity: 0.2,
-    });
-    this.ambientPoints = new THREE.Points(geo, this.ambientMat);
-    this.ambientPoints.frustumCulled = false;
-    this.scene.add(this.ambientPoints);
-    this._ambientPositions = positions;
-  }
-
-  _createCausticsFloor() {
-    const geo = new THREE.PlaneGeometry(80, 80);
-    this.causticsMat = new THREE.MeshBasicMaterial({
-      color: 0x003322, transparent: true, opacity: 0.04, depthWrite: false,
-    });
-    this.causticsFloor = new THREE.Mesh(geo, this.causticsMat);
-    this.causticsFloor.rotation.x = -Math.PI / 2;
-    this.causticsFloor.position.y = -14;
-    this.scene.add(this.causticsFloor);
-  }
-
-  update(features, elapsed) {
-    const showRays = document.getElementById('chk-godrays').checked;
-    const dynVal = features.dynamics * currentPreset.dynamics * sensitivity;
-    const brightVal = features.brightness * currentPreset.brightness * sensitivity;
-    for (const ray of this.godRays) {
-      ray.mat.uniforms.uTime.value = elapsed;
-      ray.mesh.position.x = ray.baseX + Math.sin(elapsed*0.15+ray.phase)*2;
-      ray.mesh.visible = showRays;
-      // God rays pulse with dynamics AND brightness
-      ray.mat.uniforms.uOpacity.value = 0.3 + brightVal * 0.5 + dynVal * 0.4;
-    }
-
-    const pos = this._ambientPositions;
-    const count = pos.length / 3;
-    for (let i = 0; i < count; i++) {
-      pos[i*3+1] -= 0.003;
-      pos[i*3]   += Math.sin(elapsed*0.1+i*0.1)*0.002;
-      pos[i*3+2] += Math.cos(elapsed*0.08+i*0.15)*0.002;
-      if (pos[i*3+1] < -20) pos[i*3+1] = 20;
-    }
-    this.ambientPoints.geometry.attributes.position.needsUpdate = true;
-    this.ambientMat.opacity = 0.1 + dynVal * 0.2;
-  }
-
-  updateScheme() {
-    const scheme = COLOR_SCHEMES[currentScheme];
-    for (const ray of this.godRays) ray.mat.uniforms.uColor.value.copy(scheme.godRay);
-    const colors = this.ambientPoints.geometry.attributes.color.array;
-    for (let i = 0; i < colors.length/3; i++) {
-      const v=0.5+Math.random()*0.5;
-      colors[i*3]=scheme.ambient.r*v; colors[i*3+1]=scheme.ambient.g*v; colors[i*3+2]=scheme.ambient.b*v;
-    }
-    this.ambientPoints.geometry.attributes.color.needsUpdate = true;
-  }
-}
-
-/* ================================================================
-   8. MIDI SUPPORT
-   ================================================================ */
-class MIDIController {
-  constructor() {
-    this.active = false;
-    this.lastVelocity = 0;
-    this.lastPitch = 60;
-    this.sustainHeld = false;
-    this._noteWindow = [];
-    this._init();
-  }
-  async _init() {
-    if (!navigator.requestMIDIAccess) return;
-    try {
-      const midi = await navigator.requestMIDIAccess();
-      midi.inputs.forEach(input => { input.onmidimessage = e => this._handle(e); });
-      midi.onstatechange = e => {
-        if (e.port.type==='input' && e.port.state==='connected') {
-          e.port.onmidimessage = ev => this._handle(ev);
-          showStatus('MIDI: ' + e.port.name);
-        }
-      };
-      this.active = true;
-    } catch(e) {}
-  }
-  _handle(msg) {
-    const [st, d1, d2] = msg.data;
-    const cmd = st >> 4;
-    if (cmd===9 && d2>0) { this.lastVelocity=d2/127; this.lastPitch=d1; this._noteWindow.push(performance.now()); }
-    else if (cmd===11 && d1===64) { this.sustainHeld = d2>=64; }
-  }
-  getOverrides(ts) {
-    this._noteWindow = this._noteWindow.filter(t => t > ts-4000);
-    return {
-      dynamics: this.lastVelocity,
-      density: Math.min(1, this._noteWindow.length/16),
-      brightness: Math.min(1, (this.lastPitch-36)/60),
-    };
-  }
-}
-
-/* ================================================================
-   9. MAIN APPLICATION
-   ================================================================ */
-class App {
-  constructor() {
-    this.clock = new THREE.Clock();
-    this.shoals = [];
-    this.whales = [];
-    this.environment = null;
-    this.audio = new AudioAnalyzer();
-    this.midi = new MIDIController();
-    this.isAudioActive = false;
-    this._fpsFrames = 0;
-    this._fpsTime = 0;
-
-    // VU meter canvas
-    this.vuCanvas = document.getElementById('vu-canvas');
-    this.vuCtx = this.vuCanvas.getContext('2d');
-
-    this._initRenderer();
-    this._initScene();
-    this._initPostProcessing();
-    this._initUI();
-    this._buildDefaultScene();
-    this._animate();
-    window.addEventListener('resize', () => this._onResize());
-  }
-
-  _initRenderer() {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.0;
-    const canvas = this.renderer.domElement;
-    canvas.id = 'main-canvas';
-    document.body.prepend(canvas);
-  }
-
-  _initScene() {
-    this.scene = new THREE.Scene();
-    const scheme = COLOR_SCHEMES[currentScheme];
-    this.scene.background = scheme.background.clone();
-    this.scene.fog = new THREE.Fog(scheme.fogFar.clone(), 5, 50);
-
-    this.camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 120);
-    this.camera.position.set(0, 2, 22);
-
-    this.ambientLight = new THREE.AmbientLight(0x003355, 0.25);
-    this.scene.add(this.ambientLight);
-    this.sunLight = new THREE.DirectionalLight(0xaaddff, 0.9);
-    this.sunLight.position.set(5, 30, 10);
-    this.scene.add(this.sunLight);
-    this.hemiLight = new THREE.HemisphereLight(0x446688, 0x000d1a, 0.3);
-    this.scene.add(this.hemiLight);
-
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.04;
-    this.controls.autoRotate = true;
-    this.controls.autoRotateSpeed = 0.15;
-    this.controls.minDistance = 5;
-    this.controls.maxDistance = 40;
-    this.controls.minPolarAngle = Math.PI / 5;
-    this.controls.maxPolarAngle = Math.PI * 4 / 5;
-    this.controls.enablePan = false;
-  }
-
-  _initPostProcessing() {
-    this.composer = new EffectComposer(this.renderer);
-    this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight), 1.4, 0.8, 0.12
-    );
-    this.composer.addPass(this.bloomPass);
-    this.vignettePass = new ShaderPass(VignetteShader);
-    this.composer.addPass(this.vignettePass);
-    this.composer.addPass(new OutputPass());
-  }
-
-  _buildDefaultScene() {
-    this.environment = new Environment(this.scene);
-    this._rebuildShoals(2, 500);
-    this._rebuildWhales(2);
-  }
-
-  _rebuildShoals(count, pps) {
-    for (const s of this.shoals) s.dispose();
-    this.shoals = [];
-    for (let i = 0; i < count; i++) this.shoals.push(new Shoal(pps, i, this.scene));
-  }
-
-  _rebuildWhales(count) {
-    for (const w of this.whales) w.dispose();
-    this.whales = [];
-    const configs = [
-      { scale:3.5, pathRadius:22, pathHeight:3, pathSpeed:0.04, phaseOffset:0, yOffset:1, seed:1, displacementRadius:9, breathPeriod:9 },
-      { scale:2.5, pathRadius:16, pathHeight:2, pathSpeed:0.055, phaseOffset:Math.PI*0.7, yOffset:-2, seed:2, displacementRadius:7, breathPeriod:7 },
-      { scale:1.8, pathRadius:13, pathHeight:1.5, pathSpeed:0.07, phaseOffset:Math.PI*1.4, yOffset:-4, seed:3, displacementRadius:5.5, breathPeriod:6 },
-    ];
-    for (let i = 0; i < count && i < configs.length; i++) {
-      this.whales.push(new Whale(configs[i], this.scene));
-    }
-  }
-
-  _initUI() {
-    const self = this;
-
-    // Audio source
-    document.querySelectorAll('input[name="source"]').forEach(r => {
-      r.addEventListener('change', () => {
-        document.getElementById('file-upload-area').style.display =
-          r.value === 'file' && r.checked ? 'block' : 'none';
-      });
-    });
-
-    // File upload
-    document.getElementById('audio-file').addEventListener('change', e => {
-      if (e.target.files.length) {
-        const file = e.target.files[0];
-        document.getElementById('file-name').textContent = file.name;
-        if (self.audio.audioEl) self.audio.audioEl.pause();
-        const el = new Audio();
-        el.src = URL.createObjectURL(file);
-        el.crossOrigin = 'anonymous';
-        el.loop = true;
-        self.audio.setAudioElement(el);
-      }
-    });
-
-    // Start / Stop
-    document.getElementById('btn-start').addEventListener('click', async () => {
-      const btn = document.getElementById('btn-start');
-      if (self.isAudioActive) {
-        self.audio.stop();
-        self.isAudioActive = false;
-        btn.textContent = 'Start Audio Analysis';
-        btn.classList.remove('active');
-        document.getElementById('vu-status').textContent = 'No Input';
-        document.getElementById('vu-db').textContent = '-∞ dB';
-        document.getElementById('vu-peak-fill').style.width = '0%';
-        showStatus('Audio stopped');
-        return;
-      }
-      const source = document.querySelector('input[name="source"]:checked').value;
-      if (source === 'file' && !self.audio.audioEl) {
-        showStatus('Please select an audio file first', true);
-        return;
-      }
-      btn.textContent = 'Connecting...';
-      btn.disabled = true;
-      const ok = await self.audio.init(source);
-      btn.disabled = false;
-      if (ok) {
-        self.isAudioActive = true;
-        btn.textContent = 'Stop Audio';
-        btn.classList.add('active');
-        document.getElementById('instructions').style.opacity = '0';
-        document.getElementById('vu-status').textContent = 'Listening';
-        showStatus('Audio active — ' + source);
-      } else {
-        btn.textContent = 'Start Audio Analysis';
-      }
-    });
-
-    // Presets
-    const presetDescs = {
-      expressive: PRESETS.expressive.desc,
-      rhythmic: PRESETS.rhythmic.desc,
-      harmonic: PRESETS.harmonic.desc,
-    };
-    document.querySelectorAll('[data-preset]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const name = btn.dataset.preset;
-        currentPreset = { ...PRESETS[name] };
-        document.getElementById('preset-desc').textContent = presetDescs[name];
-      });
-    });
-
-    // Sliders
-    const wire = (id, vid, cb) => {
-      const sl = document.getElementById(id);
-      const vl = document.getElementById(vid);
-      sl.addEventListener('input', () => { vl.textContent = sl.value; cb(parseFloat(sl.value)); });
-    };
-    wire('sl-shoals', 'val-shoals', v => self._rebuildShoals(v, parseInt(document.getElementById('sl-particles').value)));
-    wire('sl-particles', 'val-particles', v => self._rebuildShoals(parseInt(document.getElementById('sl-shoals').value), v));
-    wire('sl-whales', 'val-whales', v => self._rebuildWhales(v));
-    wire('sl-sensitivity', 'val-sensitivity', v => { sensitivity = v; });
-    wire('sl-bloom', 'val-bloom', v => { self.bloomPass.strength = v; });
-
-    document.getElementById('sel-color').addEventListener('change', e => {
-      currentScheme = e.target.value;
-      self._applyScheme();
-    });
-
-    document.getElementById('chk-autorotate').addEventListener('change', e => {
-      self.controls.autoRotate = e.target.checked;
-    });
-  }
-
-  _applyScheme() {
-    const scheme = COLOR_SCHEMES[currentScheme];
-    this.scene.background.copy(scheme.background);
-    this.scene.fog.color.copy(scheme.fogFar);
-    for (const s of this.shoals) s.updateColors();
-    for (const w of this.whales) w.updateScheme();
-    this.environment.updateScheme();
-  }
-
-  _updateMetrics(f) {
-    const set = (id, val, pct) => {
-      document.getElementById('mv-'+id).textContent = val;
-      document.getElementById('mf-'+id).style.width = Math.min(100, pct)+'%';
-    };
-    set('tempo', Math.round(f.tempo)+' BPM', (f.tempo/200)*100);
-    set('bright', f.brightness.toFixed(2), f.brightness*100);
-    set('dynamics', f.dynamics.toFixed(2), f.dynamics*100);
-    set('turb', f.turbulence.toFixed(2), f.turbulence*100);
-    set('density', f.density.toFixed(2), f.density*100);
-    set('complex', f.complexity.toFixed(2), f.complexity*100);
-  }
-
-  _updateVU() {
-    const w = this.vuCanvas.width, h = this.vuCanvas.height;
-    this.audio.drawVU(this.vuCtx, w, h);
-
-    if (this.isAudioActive && this.audio.running) {
-      // Peak level bar
-      const dbNorm = Math.max(0, Math.min(1, (this.audio.rawDB + 60) / 60));
-      document.getElementById('vu-peak-fill').style.width = (dbNorm * 100) + '%';
-      // dB readout
-      const db = this.audio.rawDB;
-      document.getElementById('vu-db').textContent = db > -80 ? db.toFixed(1) + ' dB' : '-∞ dB';
-      // Status color
-      const statusEl = document.getElementById('vu-status');
-      if (db > -12) { statusEl.textContent = 'LOUD'; statusEl.style.color = '#ff6644'; }
-      else if (db > -30) { statusEl.textContent = 'Active'; statusEl.style.color = '#44dd88'; }
-      else if (db > -55) { statusEl.textContent = 'Quiet'; statusEl.style.color = '#448866'; }
-      else { statusEl.textContent = 'Silent'; statusEl.style.color = '#446666'; }
-    }
-  }
-
-  _animate() {
-    requestAnimationFrame(() => this._animate());
-
-    const dt = Math.min(this.clock.getDelta(), 0.05);
-    const elapsed = this.clock.getElapsedTime();
-    const now = performance.now();
-
-    // FPS
-    this._fpsFrames++;
-    if (now - this._fpsTime > 500) {
-      document.getElementById('fps').textContent = Math.round(this._fpsFrames/((now-this._fpsTime)/1000))+' fps';
-      this._fpsFrames = 0; this._fpsTime = now;
-    }
-
-    // Audio
-    if (this.isAudioActive) this.audio.update(now);
-
-    let features = this.audio.getFeatures();
-
-    // MIDI merge
-    if (this.midi.active) {
-      const mo = this.midi.getOverrides(now);
-      if (mo.dynamics > 0.01) features.dynamics = Math.max(features.dynamics, mo.dynamics);
-      if (mo.density > 0.01) features.density = Math.max(features.density, mo.density);
-      if (mo.brightness > 0.01) features.brightness = mo.brightness*0.5 + features.brightness*0.5;
-    }
-
-    // Gentle ambient when no audio
-    if (!this.isAudioActive) {
-      features = {
-        tempo: 85 + Math.sin(elapsed*0.1)*10,
-        brightness: 0.3 + Math.sin(elapsed*0.15)*0.08,
-        dynamics: 0.15 + Math.sin(elapsed*0.2)*0.04,
-        turbulence: 0.06 + Math.sin(elapsed*0.12)*0.02,
-        density: 0.5 + Math.sin(elapsed*0.08)*0.08,
-        complexity: 0.2 + Math.sin(elapsed*0.18)*0.06,
-      };
-    }
-
-    // Update systems
-    for (const whale of this.whales) whale.update(features, dt, elapsed);
-    for (const shoal of this.shoals) shoal.update(features, this.whales, dt, elapsed);
-    this.environment.update(features, elapsed);
-
-    // Dynamic bloom: pulse with dynamics
-    if (this.isAudioActive) {
-      const dynBoost = features.dynamics * currentPreset.dynamics * sensitivity;
-      this.bloomPass.strength = parseFloat(document.getElementById('sl-bloom').value) + dynBoost * 0.6;
-    }
-
-    // Camera float
-    this.camera.position.y += Math.sin(elapsed*0.3)*0.001;
-    this.sunLight.intensity = 0.9 + Math.sin(elapsed*0.4)*0.1;
-
-    this.controls.update();
-    this._updateMetrics(features);
-    this._updateVU();
-    this.composer.render();
-  }
-
-  _onResize() {
-    const w = window.innerWidth, h = window.innerHeight;
-    this.camera.aspect = w/h;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(w, h);
-    this.composer.setSize(w, h);
-    this.bloomPass.resolution.set(w, h);
-  }
-}
+let scheme = 'abyssal';
+let flock = { ...FLOCK_PRESETS.tight };
+let sens = { master:1.5, smooth:0.3, tempo:1, dyn:1.5, flux:1.2, dens:1 };
+let vis = { bloom:true, bloomStr:0.5, bloomThresh:0.3, bright:1.0 };
+let whaleInfluence = 2.0;
 
 /* ================================================================
    UTILITIES
    ================================================================ */
-function showStatus(msg, isError = false) {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.style.color = isError ? '#dd6644' : '#44aa88';
-  el.classList.add('visible');
-  clearTimeout(el._timer);
-  el._timer = setTimeout(() => el.classList.remove('visible'), 3000);
+function hashN(x,y,z){ let n=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453; return n-Math.floor(n); }
+function noise3D(x,y,z){
+  const ix=Math.floor(x),iy=Math.floor(y),iz=Math.floor(z);
+  let fx=x-ix,fy=y-iy,fz=z-iz;
+  fx*=fx*(3-2*fx); fy*=fy*(3-2*fy); fz*=fz*(3-2*fz);
+  const l=(a,b,t)=>a+(b-a)*t, h=(i,j,k)=>hashN(i,j,k);
+  return l(l(l(h(ix,iy,iz),h(ix+1,iy,iz),fx),l(h(ix,iy+1,iz),h(ix+1,iy+1,iz),fx),fy),
+           l(l(h(ix,iy,iz+1),h(ix+1,iy,iz+1),fx),l(h(ix,iy+1,iz+1),h(ix+1,iy+1,iz+1),fx),fy),fz)*2-1;
+}
+function showStatus(m,e=false){const el=document.getElementById('status');el.textContent=m;el.style.color=e?'#cc5544':'#44aa88';el.classList.add('visible');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('visible'),3000);}
+
+/* ================================================================
+   SHADERS
+   ================================================================ */
+const VignetteShader={uniforms:{tDiffuse:{value:null},darkness:{value:0.6},offset:{value:0.35}},
+vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+fragmentShader:`uniform sampler2D tDiffuse;uniform float darkness;uniform float offset;varying vec2 vUv;
+void main(){vec4 c=texture2D(tDiffuse,vUv);float d=distance(vUv,vec2(0.5));
+c.rgb=mix(c.rgb,vec3(0.0,0.012,0.035),smoothstep(offset,offset+0.6,d)*darkness);gl_FragColor=c;}`};
+
+const WhaleGlowV=`varying vec3 vN;varying vec3 vW;void main(){vN=normalize(normalMatrix*normal);vW=(modelMatrix*vec4(position,1.0)).xyz;gl_Position=projectionMatrix*viewMatrix*modelMatrix*vec4(position,1.0);}`;
+const WhaleGlowF=`uniform vec3 uCol;uniform float uStr;uniform float uT;varying vec3 vN;varying vec3 vW;
+void main(){vec3 vd=normalize(cameraPosition-vW);float f=1.0-abs(dot(vN,vd));
+float g=(pow(f,1.6)*0.6+pow(1.0-f,0.5)*0.2)*uStr;
+g*=0.8+0.2*sin(vW.x*2.0+uT*0.5)*sin(vW.z*1.8+uT*0.4);
+gl_FragColor=vec4(uCol*g*2.0,g*0.4);}`;
+
+const GodRayV=`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
+const GodRayF=`uniform vec3 uCol;uniform float uOp;uniform float uT;varying vec2 vUv;
+void main(){float a=smoothstep(0.0,0.25,vUv.y)*smoothstep(1.0,0.45,vUv.y)*smoothstep(0.0,0.25,vUv.x)*smoothstep(1.0,0.75,vUv.x);
+a*=uOp*(0.85+0.15*sin(uT*0.25+vUv.y*3.5));gl_FragColor=vec4(uCol,a*0.12);}`;
+
+/* ================================================================
+   SPATIAL GRID
+   ================================================================ */
+class Grid{
+  constructor(cs){this.cs=cs;this.inv=1/cs;this.m=new Map();}
+  clear(){this.m.clear();}
+  _k(x,y,z){return((x*92837111)^(y*689287499)^(z*283923481))|0;}
+  add(px,py,pz,i){const k=this._k(Math.floor(px*this.inv),Math.floor(py*this.inv),Math.floor(pz*this.inv));let a=this.m.get(k);if(!a){a=[];this.m.set(k,a);}a.push(i);}
+  query(px,py,pz,r){r.length=0;const cx=Math.floor(px*this.inv),cy=Math.floor(py*this.inv),cz=Math.floor(pz*this.inv);
+    for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)for(let dz=-1;dz<=1;dz++){const a=this.m.get(this._k(cx+dx,cy+dy,cz+dz));if(a)for(let i=0;i<a.length;i++)r.push(a[i]);}}
 }
 
 /* ================================================================
-   LAUNCH
+   BEHAVIOUR STATE — musical memory + behavioural blending
+   Tracks recent audio history and produces blended behavioural weights
+   that modulate flocking rules organically.
    ================================================================ */
-const app = new App();
+class BehaviourState {
+  constructor(){
+    this.resting=0.5; this.alert=0; this.startled=0; this.feeding=0; this.exploring=0;
+    this._mem=[]; this._startleCD=0;
+    this._recentAvgDyn=0; this._recentAvgFlux=0;
+    this.dominantLabel='Resting';
+  }
+  update(f,dt){
+    // Musical memory — 4s rolling window
+    const now=performance.now();
+    this._mem.push({d:f.dynamics,t:f.turbulence,dn:f.density,c:f.complexity,ts:now});
+    this._mem=this._mem.filter(m=>m.ts>now-4000);
+    const n=this._mem.length||1;
+    this._recentAvgDyn=this._mem.reduce((s,m)=>s+m.d,0)/n;
+    this._recentAvgFlux=this._mem.reduce((s,m)=>s+m.t,0)/n;
 
+    // Startle: sudden spike well above recent average
+    if(this._startleCD>0) this._startleCD-=dt;
+    if(f.dynamics>this._recentAvgDyn*2.2+0.15 && f.turbulence>this._recentAvgFlux*1.5+0.08 && this._startleCD<=0){
+      this.startled=Math.min(1,this.startled+0.7);
+      this._startleCD=1.5; // cooldown seconds
+    }
+    this.startled*=Math.max(0,1-dt*1.2); // decay
+
+    // Feeding: sustained high onset density
+    const feedTarget=Math.min(1,f.density*2);
+    this.feeding+=(feedTarget-this.feeding)*dt*1.5;
+
+    // Resting: low dynamics over time
+    const restTarget=Math.max(0,1-this._recentAvgDyn*4);
+    this.resting+=(restTarget-this.resting)*dt*0.8;
+
+    // Alert: moderate dynamics
+    const alertTarget=Math.min(1,f.dynamics*2)*(1-this.startled);
+    this.alert+=(alertTarget-this.alert)*dt*2;
+
+    // Exploring: harmonic complexity
+    this.exploring+=(Math.min(1,f.complexity*2)-this.exploring)*dt*1.2;
+
+    // Dominant label for display
+    const vals={Resting:this.resting,Alert:this.alert,Startled:this.startled,Feeding:this.feeding,Exploring:this.exploring};
+    this.dominantLabel=Object.entries(vals).sort((a,b)=>b[1]-a[1])[0][0];
+  }
+  // Returns blended flock modifiers
+  getModifiers(){
+    return {
+      speedMult: 0.6 + this.alert*0.6 + this.startled*1.5 + this.feeding*0.8 - this.resting*0.3,
+      cohesionMult: 1.0 + this.feeding*1.2 + this.alert*0.5 - this.startled*0.8 - this.exploring*0.5 + this.resting*0.2,
+      separationMult: 1.0 + this.startled*3.0 - this.feeding*0.3,
+      alignmentMult: 1.0 + this.alert*0.6 + this.feeding*0.4 - this.startled*0.3 - this.resting*0.2,
+      turbulenceMult: 1.0 + this.startled*2.0 + this.exploring*0.8 - this.resting*0.4,
+      circlingForce: this.feeding * 0.6,
+      scatterForce: this.startled,
+    };
+  }
+}
+
+/* ================================================================
+   AUDIO ANALYZER
+   ================================================================ */
+class AudioAnalyzer {
+  constructor(){
+    this.ctx=null;this.analyser=null;this.source=null;this._stream=null;this.running=false;
+    this.freqData=null;this.timeData=null;this.prevFreq=null;
+    this.features={tempo:0,brightness:0.5,dynamics:0,turbulence:0,density:0,complexity:0.3};
+    this.rawBPM=120; this.rawRMS=0; this.rawDB=-Infinity;
+    this._sm={};['brightness','dynamics','turbulence','density','complexity'].forEach(k=>{this._sm[k]={v:0,mx:0.01,mn:0};});
+    this._eHist=[];this._onsetT=[];this._onsetCD=0;this._recentOn=[];
+    this.audioEl=null;
+  }
+  async init(mode){
+    this.stop();
+    try{
+      this.ctx=new(window.AudioContext||window.webkitAudioContext)();
+      if(this.ctx.state==='suspended')await this.ctx.resume();
+      this.analyser=this.ctx.createAnalyser();
+      this.analyser.fftSize=2048; this.analyser.smoothingTimeConstant=0.4;
+      this.analyser.minDecibels=-90; this.analyser.maxDecibels=-10;
+      const bl=this.analyser.frequencyBinCount;
+      this.freqData=new Uint8Array(bl);this.timeData=new Uint8Array(2048);this.prevFreq=new Float32Array(bl);
+      if(mode==='mic'){
+        let st;try{st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});}catch(e){st=await navigator.mediaDevices.getUserMedia({audio:true});}
+        this._stream=st;this.source=this.ctx.createMediaStreamSource(st);this.source.connect(this.analyser);
+      }else if(mode==='file'){
+        if(!this.audioEl)throw new Error('No audio file selected');
+        this.source=this.ctx.createMediaElementSource(this.audioEl);this.source.connect(this.analyser);this.analyser.connect(this.ctx.destination);this.audioEl.play();
+      }else if(mode==='system'){
+        const st=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+        this._stream=st;this.source=this.ctx.createMediaStreamSource(st);this.source.connect(this.analyser);
+        if(!st.getAudioTracks().length)showStatus('No audio — check "Share audio" in dialog',true);
+      }
+      if(this.ctx.state!=='running')await this.ctx.resume();
+      this.running=true;
+      Object.values(this._sm).forEach(s=>{s.v=0;s.mx=0.01;s.mn=0;});
+      this._eHist=[];this._onsetT=[];this._recentOn=[];this.rawBPM=120;
+      return true;
+    }catch(e){showStatus(e.message||'Audio init failed',true);return false;}
+  }
+  stop(){
+    if(this.audioEl)this.audioEl.pause();
+    if(this._stream){this._stream.getTracks().forEach(t=>t.stop());this._stream=null;}
+    if(this.source){try{this.source.disconnect();}catch(e){}this.source=null;}
+    if(this.ctx&&this.ctx.state!=='closed'){try{this.ctx.close();}catch(e){}}
+    this.ctx=null;this.analyser=null;this.running=false;this.rawRMS=0;this.rawDB=-Infinity;
+  }
+  setAudioElement(el){this.audioEl=el;}
+  _smooth(k,raw){
+    const s=this._sm[k];
+    const spd=1/(sens.smooth*60+1); // smoothing amount → alpha
+    s.mx=Math.max(s.mx*0.993,Math.abs(raw)+0.001);s.mn*=0.998;
+    const rng=s.mx-s.mn;const norm=rng>0.001?Math.min(1,Math.max(0,(Math.abs(raw)-s.mn)/rng)):0;
+    const alpha=norm>s.v?spd*2.5:spd*0.8; // fast attack slow release
+    s.v+=(norm-s.v)*alpha; return s.v;
+  }
+  update(ts){
+    if(!this.running||!this.analyser)return;
+    this.analyser.getByteFrequencyData(this.freqData);this.analyser.getByteTimeDomainData(this.timeData);
+    const fr=this.freqData,tm=this.timeData,N=fr.length,sr=this.ctx.sampleRate;
+    let rmsS=0;for(let i=0;i<tm.length;i++){const v=(tm[i]-128)/128;rmsS+=v*v;}
+    const rms=Math.sqrt(rmsS/tm.length);this.rawRMS=rms;this.rawDB=rms>0?20*Math.log10(rms):-90;
+    let wS=0,fS=0;for(let i=0;i<N;i++){wS+=fr[i]*i;fS+=fr[i];}
+    const centroid=fS>0?(wS/fS)*(sr/2/N):0;
+    let flux=0;for(let i=0;i<N;i++){const d=fr[i]-this.prevFreq[i];if(d>0)flux+=d;this.prevFreq[i]=fr[i];}
+    const meanB=fS>0?wS/fS:N/2;let spS=0;for(let i=0;i<N;i++){const d=i-meanB;spS+=fr[i]*d*d;}
+    const spread=fS>0?Math.sqrt(spS/fS):0;
+    this._eHist.push(rms);if(this._eHist.length>30)this._eHist.shift();
+    if(this._onsetCD>0)this._onsetCD--;
+    let isOn=false;
+    if(this._eHist.length>=6){const avg=this._eHist.reduce((a,b)=>a+b,0)/this._eHist.length;
+      if(rms>avg*1.5+0.01&&this._onsetCD===0){isOn=true;this._onsetCD=5;this._onsetT.push(ts);
+        this._onsetT=this._onsetT.filter(t=>t>ts-8000);
+        if(this._onsetT.length>=3){const iv=[];for(let i=1;i<this._onsetT.length;i++)iv.push(this._onsetT[i]-this._onsetT[i-1]);
+          iv.sort((a,b)=>a-b);const med=iv[Math.floor(iv.length/2)];if(med>150&&med<3000)this.rawBPM=this.rawBPM*0.8+(60000/med)*0.2;}}}
+    if(isOn)this._recentOn.push(ts);
+    this._recentOn=this._recentOn.filter(t=>t>ts-3000);
+    const onDens=this._recentOn.length/3;
+    this.features.dynamics  =this._smooth('dynamics',rms);
+    this.features.brightness=this._smooth('brightness',centroid/3000);
+    this.features.turbulence=this._smooth('turbulence',flux/500);
+    this.features.complexity=this._smooth('complexity',spread/150);
+    this.features.density   =this._smooth('density',onDens/4);
+    this.features.tempo     =Math.max(40,Math.min(220,this.rawBPM));
+  }
+  getFeatures(){return this.features;}
+  drawVU(ctx,w,h){
+    ctx.clearRect(0,0,w,h);
+    if(!this.running||!this.timeData){ctx.strokeStyle='rgba(40,90,110,0.15)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();return;}
+    const d=this.timeData,len=d.length,step=Math.ceil(len/w),lv=Math.min(1,this.rawRMS*4);
+    const r=30+lv*180,g=160-lv*60,b=180-lv*80;
+    const gr=ctx.createLinearGradient(0,0,0,h);gr.addColorStop(0,`rgba(${r},${g},${b},0)`);gr.addColorStop(0.5,`rgba(${r},${g},${b},${0.1+lv*0.3})`);gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    ctx.fillStyle=gr;ctx.beginPath();ctx.moveTo(0,h/2);
+    for(let x=0;x<w;x++){const v=(d[Math.min(len-1,x*step)]-128)/128;ctx.lineTo(x,h/2-v*h*0.42);}
+    ctx.lineTo(w,h/2);for(let x=w-1;x>=0;x--){const v=(d[Math.min(len-1,x*step)]-128)/128;ctx.lineTo(x,h/2+v*h*0.2);}
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle=`rgba(${r},${g},${b},${0.5+lv*0.5})`;ctx.lineWidth=1+lv;ctx.beginPath();
+    for(let x=0;x<w;x++){const v=(d[Math.min(len-1,x*step)]-128)/128;x===0?ctx.moveTo(x,h/2-v*h*0.42):ctx.lineTo(x,h/2-v*h*0.42);}ctx.stroke();
+  }
+}
+
+/* ================================================================
+   FISH GEOMETRY — elongated body oriented along +Z, with tail fork
+   8 verts, 9 tris. Recognisably fish-like even at small scale.
+   ================================================================ */
+function createFishGeo(){
+  const p=new Float32Array([
+    0,0,0.065,        // 0 nose
+    0.016,0,0.005,    // 1 right
+    -0.016,0,0.005,   // 2 left
+    0,0.01,-0.005,    // 3 top
+    0,-0.01,-0.005,   // 4 bottom
+    0,0,-0.045,       // 5 tail base
+    0,0.009,-0.065,   // 6 tail top
+    0,-0.009,-0.065,  // 7 tail bottom
+  ]);
+  const idx=new Uint16Array([0,1,3, 0,3,2, 0,2,4, 0,4,1, 1,5,3, 3,5,2, 2,5,4, 4,5,1, 5,6,7]);
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(p,3));
+  g.setIndex(new THREE.BufferAttribute(idx,1));
+  g.computeVertexNormals();
+  return g;
+}
+
+/* ================================================================
+   SHOAL — InstancedMesh fish with oriented geometry + behavioural flocking
+   ================================================================ */
+const _pos=new THREE.Vector3(),_dir=new THREE.Vector3(),_tgt=new THREE.Vector3();
+const _up=new THREE.Vector3(0,1,0),_up2=new THREE.Vector3(1,0,0);
+const _q=new THREE.Quaternion(),_bq=new THREE.Quaternion(),_sc=new THREE.Vector3();
+const _m4=new THREE.Matrix4(),_col=new THREE.Color();
+
+class Shoal{
+  constructor(count,ci,scene){
+    this.max=count;this.active=count;this.ci=ci;this.scene=scene;
+    this.px=new Float32Array(count);this.py=new Float32Array(count);this.pz=new Float32Array(count);
+    this.vx=new Float32Array(count);this.vy=new Float32Array(count);this.vz=new Float32Array(count);
+    this.pvx=new Float32Array(count);this.pvy=new Float32Array(count);this.pvz=new Float32Array(count);
+    this.scales=new Float32Array(count);this.phases=new Float32Array(count);
+    this.behaviour=new BehaviourState();
+    this.centerX=0;this.centerY=0;this.centerZ=0;
+    this.grid=new Grid(3.5);this._nb=[];
+    this.baseColor=new THREE.Color(SCHEMES[scheme].fish[ci%5]);
+
+    const cx=(Math.random()-0.5)*14,cy=(Math.random()-0.5)*6,cz=(Math.random()-0.5)*14;
+    for(let i=0;i<count;i++){
+      this.px[i]=cx+(Math.random()-0.5)*8;this.py[i]=cy+(Math.random()-0.5)*6;this.pz[i]=cz+(Math.random()-0.5)*8;
+      const a=Math.random()*Math.PI*2,sp=0.4+Math.random()*0.4;
+      this.vx[i]=Math.cos(a)*sp;this.vy[i]=(Math.random()-0.5)*0.3;this.vz[i]=Math.sin(a)*sp;
+      this.pvx[i]=this.vx[i];this.pvy[i]=this.vy[i];this.pvz[i]=this.vz[i];
+      this.scales[i]=0.8+Math.random()*0.5;
+      this.phases[i]=Math.random()*Math.PI*2;
+    }
+    this._buildMesh(count);
+  }
+  _buildMesh(count){
+    const geo=createFishGeo();
+    this.mat=new THREE.MeshLambertMaterial({transparent:true,opacity:0.88,side:THREE.DoubleSide});
+    this.mesh=new THREE.InstancedMesh(geo,this.mat,count);
+    this.mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(count*3),3);
+    this.mesh.instanceColor.usage=THREE.DynamicDrawUsage;
+    this.mesh.instanceMatrix.usage=THREE.DynamicDrawUsage;
+    this.mesh.frustumCulled=false;
+    this.scene.add(this.mesh);
+  }
+  updateColors(){this.baseColor.set(SCHEMES[scheme].fish[this.ci%5]);}
+  update(f,whales,dt,elapsed){
+    if(dt>0.1)dt=0.1;
+    const sm=sens.master;
+    // Apply per-feature sensitivities
+    const ef={
+      tempo:f.tempo, brightness:f.brightness*sm,
+      dynamics:f.dynamics*sens.dyn*sm,
+      turbulence:f.turbulence*sens.flux*sm,
+      density:f.density*sens.dens*sm,
+      complexity:f.complexity*sm,
+    };
+    this.behaviour.update(ef,dt);
+    const bm=this.behaviour.getModifiers();
+
+    // Speed from tempo + behaviour
+    const tempoSpd=0.4+(ef.tempo/100)*0.5*sens.tempo*sm;
+    const maxSpd=2.2*tempoSpd*bm.speedMult;
+    const maxForce=0.7*Math.max(0.3,tempoSpd)*bm.speedMult;
+    const perc=3.5*(1+ef.dynamics*1.5);
+    const sepW=flock.sep*bm.separationMult;
+    const aliW=flock.ali*bm.alignmentMult;
+    const cohW=flock.coh*bm.cohesionMult;
+    const turbW=flock.turbBase*bm.turbulenceMult+ef.turbulence*1.5;
+
+    // Active count from density
+    const tgtAct=Math.max(30,Math.floor(this.max*(0.15+0.85*Math.min(1,0.2+ef.density*0.6))));
+    this.active+=Math.sign(tgtAct-this.active)*Math.min(12,Math.abs(tgtAct-this.active));
+    this.active=Math.max(30,Math.min(this.max,this.active));
+    const NC=this.active;
+
+    // Center
+    let scx=0,scy=0,scz=0;
+    for(let i=0;i<NC;i++){scx+=this.px[i];scy+=this.py[i];scz+=this.pz[i];}
+    this.centerX=scx/NC;this.centerY=scy/NC;this.centerZ=scz/NC;
+
+    // Grid
+    this.grid.clear();
+    for(let i=0;i<NC;i++)this.grid.add(this.px[i],this.py[i],this.pz[i],i);
+
+    const percSq=perc*perc,sepD=perc*0.4,sepSq=sepD*sepD;
+    const bound=22,margin=4,bStr=1.0;
+
+    for(let i=0;i<NC;i++){
+      const bx=this.px[i],by=this.py[i],bz=this.pz[i];
+      let sx=0,sy=0,sz=0,ax=0,ay=0,az=0,cx=0,cy=0,cz=0;
+      let sc=0,ac=0,cc=0;
+      this.grid.query(bx,by,bz,this._nb);
+      for(let j=0;j<this._nb.length;j++){
+        const ni=this._nb[j];if(ni===i)continue;
+        const dx=bx-this.px[ni],dy=by-this.py[ni],dz=bz-this.pz[ni];
+        const dSq=dx*dx+dy*dy+dz*dz;
+        if(dSq<percSq&&dSq>0.0001){
+          ax+=this.vx[ni];ay+=this.vy[ni];az+=this.vz[ni];ac++;
+          cx+=this.px[ni];cy+=this.py[ni];cz+=this.pz[ni];cc++;
+          if(dSq<sepSq){const inv=1/(Math.sqrt(dSq)+0.01);sx+=dx*inv;sy+=dy*inv;sz+=dz*inv;sc++;}
+        }
+      }
+      let fx=0,fy=0,fz=0;
+      const bvx=this.vx[i],bvy=this.vy[i],bvz=this.vz[i];
+      if(sc>0){sx/=sc;sy/=sc;sz/=sc;const m=Math.sqrt(sx*sx+sy*sy+sz*sz)||1;fx+=(sx/m*maxSpd-bvx)*sepW;fy+=(sy/m*maxSpd-bvy)*sepW;fz+=(sz/m*maxSpd-bvz)*sepW;}
+      if(ac>0){ax/=ac;ay/=ac;az/=ac;const m=Math.sqrt(ax*ax+ay*ay+az*az)||1;fx+=(ax/m*maxSpd-bvx)*aliW;fy+=(ay/m*maxSpd-bvy)*aliW;fz+=(az/m*maxSpd-bvz)*aliW;}
+      if(cc>0){cx/=cc;cy/=cc;cz/=cc;let dx2=cx-bx,dy2=cy-by,dz2=cz-bz;const m=Math.sqrt(dx2*dx2+dy2*dy2+dz2*dz2)||1;fx+=(dx2/m*maxSpd-bvx)*cohW;fy+=(dy2/m*maxSpd-bvy)*cohW;fz+=(dz2/m*maxSpd-bvz)*cohW;}
+
+      // Whale avoidance (bow wave)
+      for(let w=0;w<whales.length;w++){
+        const wh=whales[w];const dx=bx-wh.position.x,dy=by-wh.position.y,dz=bz-wh.position.z;
+        const dSq=dx*dx+dy*dy+dz*dz;const fR=wh.fieldR;
+        if(dSq<fR*fR&&dSq>0.1){const dist=Math.sqrt(dSq);const str=(1-dist/fR)*wh.strength*whaleInfluence;
+          // Directional bias: stronger push in front of whale
+          const dot=dx*wh.velocity.x+dy*wh.velocity.y+dz*wh.velocity.z;
+          const bias=dot<0?1.6:0.7;
+          fx+=(dx/dist)*str*4*bias;fy+=(dy/dist)*str*4*bias;fz+=(dz/dist)*str*4*bias;
+        }
+      }
+
+      // Startle scatter: burst away from center
+      if(bm.scatterForce>0.2){
+        const dx=bx-this.centerX,dy=by-this.centerY,dz=bz-this.centerZ;
+        const d=Math.sqrt(dx*dx+dy*dy+dz*dz)||1;
+        const str=bm.scatterForce*6;
+        fx+=(dx/d)*str;fy+=(dy/d)*str;fz+=(dz/d)*str;
+      }
+
+      // Circling (feeding): tangential force around center
+      if(bm.circlingForce>0.1){
+        const dx=bx-this.centerX,dz=bz-this.centerZ;
+        const tm2=Math.sqrt(dx*dx+dz*dz)||1;
+        fx+=(-dz/tm2)*bm.circlingForce*maxSpd*0.8;
+        fz+=(dx/tm2)*bm.circlingForce*maxSpd*0.8;
+      }
+
+      // Turbulence + current
+      const cTime=elapsed*0.03;
+      const currX=noise3D(bx*0.04,by*0.04,cTime)*0.3;
+      const currZ=noise3D(bx*0.04+50,by*0.04,cTime)*0.3;
+      fx+=(Math.random()-0.5)*turbW*maxSpd+currX;
+      fy+=(Math.random()-0.5)*turbW*maxSpd*0.5;
+      fz+=(Math.random()-0.5)*turbW*maxSpd+currZ;
+
+      // Boundaries
+      if(bx>bound-margin)fx-=(bx-bound+margin)*bStr;if(bx<-bound+margin)fx-=(bx+bound-margin)*bStr;
+      if(by>bound*0.55-margin)fy-=(by-bound*0.55+margin)*bStr;if(by<-bound*0.55+margin)fy-=(by+bound*0.55-margin)*bStr;
+      if(bz>bound-margin)fz-=(bz-bound+margin)*bStr;if(bz<-bound+margin)fz-=(bz+bound-margin)*bStr;
+
+      // Clamp
+      const fM=Math.sqrt(fx*fx+fy*fy+fz*fz);
+      if(fM>maxForce){const s=maxForce/fM;fx*=s;fy*=s;fz*=s;}
+
+      // Store previous velocity for banking
+      this.pvx[i]=this.vx[i];this.pvy[i]=this.vy[i];this.pvz[i]=this.vz[i];
+
+      // Integrate with drag (underwater feel)
+      const drag=0.985;
+      this.vx[i]=(this.vx[i]+fx*dt)*drag;
+      this.vy[i]=(this.vy[i]+fy*dt)*drag;
+      this.vz[i]=(this.vz[i]+fz*dt)*drag;
+      const spd=Math.sqrt(this.vx[i]**2+this.vy[i]**2+this.vz[i]**2);
+      if(spd>maxSpd){const s=maxSpd/spd;this.vx[i]*=s;this.vy[i]*=s;this.vz[i]*=s;}
+      if(spd<maxSpd*0.05){this.vx[i]+=(Math.random()-0.5)*0.08;this.vz[i]+=(Math.random()-0.5)*0.08;}
+
+      this.px[i]+=this.vx[i]*dt;this.py[i]+=this.vy[i]*dt;this.pz[i]+=this.vz[i]*dt;
+    }
+
+    // Update instances
+    const matrices=this.mesh.instanceMatrix.array;
+    const colors=this.mesh.instanceColor.array;
+    const bc=this.baseColor;
+    const brightMul=vis.bright*(1+ef.dynamics*1.0+ef.brightness*0.8);
+    const depthRange=24;
+
+    for(let i=0;i<this.max;i++){
+      if(i>=NC){
+        _m4.makeScale(0,0,0);_m4.toArray(matrices,i*16);
+        colors[i*3]=0;colors[i*3+1]=0;colors[i*3+2]=0;
+        continue;
+      }
+      // Orient along velocity
+      _dir.set(this.vx[i],this.vy[i],this.vz[i]);
+      const spd=_dir.length();
+      if(spd<0.001)_dir.set(0,0,1);else _dir.divideScalar(spd);
+
+      _pos.set(this.px[i],this.py[i],this.pz[i]);
+      _tgt.copy(_pos).add(_dir);
+      const upRef=Math.abs(_dir.y)>0.95?_up2:_up;
+      _m4.lookAt(_pos,_tgt,upRef);
+      _q.setFromRotationMatrix(_m4);
+
+      // Banking: lean into turns
+      const dvx=this.vx[i]-this.pvx[i],dvz=this.vz[i]-this.pvz[i];
+      const turnRate=(dvx*(-_dir.z)+dvz*_dir.x); // lateral acceleration
+      const bankAngle=Math.max(-0.6,Math.min(0.6,-turnRate*8));
+      _bq.setFromAxisAngle(_dir,bankAngle);
+      _q.premultiply(_bq);
+
+      // Wobble
+      const wobble=Math.sin(elapsed*3+this.phases[i])*0.04*(1-Math.min(1,spd*0.5));
+      _bq.setFromAxisAngle(_up,wobble);_q.premultiply(_bq);
+
+      const sc=this.scales[i]*(0.9+spd*0.15);
+      _sc.set(sc,sc,sc*1.15); // slightly elongated
+      _m4.compose(_pos,_q,_sc);
+      _m4.toArray(matrices,i*16);
+
+      // Colour: depth gradient + audio brightness
+      const depthFactor=0.55+0.45*Math.max(0,Math.min(1,(this.py[i]+12)/depthRange));
+      const b=depthFactor*brightMul*(0.85+Math.sin(this.phases[i]+elapsed*0.4)*0.15);
+      colors[i*3]=Math.min(2,bc.r*b);colors[i*3+1]=Math.min(2,bc.g*b);colors[i*3+2]=Math.min(2,bc.b*b);
+    }
+    this.mesh.instanceMatrix.needsUpdate=true;
+    this.mesh.instanceColor.needsUpdate=true;
+    this.mesh.count=NC;
+  }
+  dispose(){this.scene.remove(this.mesh);this.mesh.geometry.dispose();this.mat.dispose();}
+}
+
+/* ================================================================
+   WHALE — subtle volumetric presence with displacement field
+   ================================================================ */
+class Whale{
+  constructor(cfg,scene){
+    this.scene=scene;this.position=new THREE.Vector3();this.velocity=new THREE.Vector3();
+    this.scale=cfg.scale||3;
+    this.baseFieldR=(cfg.fieldR||8)*this.scale*0.4;this.fieldR=this.baseFieldR;
+    this.strength=cfg.strength||2;
+    this.breathPeriod=cfg.breathPeriod||8+Math.random()*4;this.breathPhase=Math.random()*Math.PI*2;
+    this.pathSpeed=cfg.pathSpeed||0.03;this.pathProgress=cfg.phaseOffset||0;
+
+    const pts=[];const nP=8;const r=cfg.pathRadius||18;const rV=r*0.35;const hV=cfg.pathHeight||3;const yO=cfg.yOffset||0;
+    for(let i=0;i<nP;i++){const t=(i/nP)*Math.PI*2;const rad=r+Math.sin(t*2+cfg.seed*5)*rV;
+      pts.push(new THREE.Vector3(Math.cos(t)*rad,yO+Math.sin(t*3+cfg.seed*3)*hV,Math.sin(t)*rad));}
+    this.path=new THREE.CatmullRomCurve3(pts,true,'centripetal',0.5);
+    this.position.copy(this.path.getPointAt(0));
+    this._createMesh();
+  }
+  _createMesh(){
+    const sc=SCHEMES[scheme];
+    // Outer glow — large, transparent, volumetric
+    const gg=new THREE.IcosahedronGeometry(1,4);
+    this.glowMat=new THREE.ShaderMaterial({vertexShader:WhaleGlowV,fragmentShader:WhaleGlowF,
+      uniforms:{uCol:{value:new THREE.Color(sc.whaleGlow)},uStr:{value:0.4},uT:{value:0}},
+      transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.FrontSide});
+    this.glowMesh=new THREE.Mesh(gg,this.glowMat);
+    this.glowMesh.scale.setScalar(this.scale*2.2);
+    // Inner subtle core
+    const cg=new THREE.IcosahedronGeometry(1,3);
+    this.coreMat=new THREE.MeshBasicMaterial({color:sc.whaleCore,transparent:true,opacity:0.1,depthWrite:false});
+    this.coreMesh=new THREE.Mesh(cg,this.coreMat);
+    this.coreMesh.scale.setScalar(this.scale*0.6);
+    this.group=new THREE.Group();this.group.add(this.glowMesh);this.group.add(this.coreMesh);
+    this.scene.add(this.group);
+  }
+  update(f,dt,elapsed){
+    const dynV=f.dynamics*sens.dyn*sens.master;
+    const tempoF=0.3+(f.tempo/100)*0.6*sens.tempo*sens.master;
+    this.pathProgress+=this.pathSpeed*dt*tempoF;if(this.pathProgress>1)this.pathProgress-=1;
+    const tgt=this.path.getPointAt(this.pathProgress%1);
+    const prev=this.position.clone();
+    this.position.lerp(tgt,0.015+dt*0.4);
+    this.velocity.subVectors(this.position,prev);
+    const breathV=Math.sin(elapsed*(Math.PI*2/this.breathPeriod)+this.breathPhase);
+    this.strength=1.5+dynV*4;this.fieldR=this.baseFieldR*(1+dynV*0.4);
+    this.group.position.copy(this.position);
+    if(this.velocity.lengthSq()>0.00001){const d=this.velocity.clone().normalize();this.group.rotation.y+=(Math.atan2(d.x,d.z)-this.group.rotation.y)*0.015;}
+    const bs=1+breathV*0.08;const ds=1+dynV*0.3;
+    this.glowMesh.scale.setScalar(this.scale*(1.8+dynV*0.8)*bs);
+    this.coreMesh.scale.setScalar(this.scale*0.6*bs*ds);
+    this.glowMat.uniforms.uStr.value=0.2+dynV*1.2+breathV*0.1;
+    this.glowMat.uniforms.uT.value=elapsed;
+    this.coreMat.opacity=0.06+dynV*0.15;
+  }
+  updateScheme(){const sc=SCHEMES[scheme];this.glowMat.uniforms.uCol.value.set(sc.whaleGlow);this.coreMat.color.set(sc.whaleCore);}
+  dispose(){this.scene.remove(this.group);this.glowMesh.geometry.dispose();this.glowMat.dispose();this.coreMesh.geometry.dispose();this.coreMat.dispose();}
+}
+
+/* ================================================================
+   ENVIRONMENT
+   ================================================================ */
+class Environment{
+  constructor(scene){
+    this.scene=scene;this.godRays=[];
+    this._createGodRays();this._createAmbient();this._createFloor();
+  }
+  _createGodRays(){
+    const sc=SCHEMES[scheme];
+    for(let i=0;i<7;i++){
+      const w=1.2+Math.random()*2.5,h=30+Math.random()*18;
+      const mat=new THREE.ShaderMaterial({vertexShader:GodRayV,fragmentShader:GodRayF,
+        uniforms:{uCol:{value:new THREE.Color(sc.ray)},uOp:{value:0.5+Math.random()*0.5},uT:{value:Math.random()*100}},
+        transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+      const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);
+      mesh.position.set((Math.random()-0.5)*50,12+Math.random()*8,(Math.random()-0.5)*50);
+      mesh.rotation.set(-0.12+Math.random()*0.25,Math.random()*Math.PI,(Math.random()-0.5)*0.15);
+      this.scene.add(mesh);
+      this.godRays.push({mesh,mat,bx:mesh.position.x,ph:Math.random()*Math.PI*2});
+    }
+  }
+  _createAmbient(){
+    const ct=500,pos=new Float32Array(ct*3),col=new Float32Array(ct*3);const sc=SCHEMES[scheme];
+    for(let i=0;i<ct;i++){pos[i*3]=(Math.random()-0.5)*55;pos[i*3+1]=(Math.random()-0.5)*35;pos[i*3+2]=(Math.random()-0.5)*55;
+      const v=0.4+Math.random()*0.6;col[i*3]=sc.ambient>>16&0xff;col[i*3+1]=sc.ambient>>8&0xff;col[i*3+2]=sc.ambient&0xff; /* will fix below */}
+    const ambCol=new THREE.Color(sc.ambient);
+    for(let i=0;i<ct;i++){const v=0.4+Math.random()*0.6;col[i*3]=ambCol.r*v;col[i*3+1]=ambCol.g*v;col[i*3+2]=ambCol.b*v;}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));
+    const cv=document.createElement('canvas');cv.width=32;cv.height=32;const cx=cv.getContext('2d');
+    const gr=cx.createRadialGradient(16,16,0,16,16,16);gr.addColorStop(0,'rgba(255,255,255,0.5)');gr.addColorStop(1,'rgba(255,255,255,0)');cx.fillStyle=gr;cx.fillRect(0,0,32,32);
+    this.ambMat=new THREE.PointsMaterial({map:new THREE.CanvasTexture(cv),size:0.1,transparent:true,blending:THREE.AdditiveBlending,vertexColors:true,sizeAttenuation:true,depthWrite:false,opacity:0.15});
+    this.ambPts=new THREE.Points(g,this.ambMat);this.ambPts.frustumCulled=false;this.scene.add(this.ambPts);
+    this._ambPos=pos;
+  }
+  _createFloor(){
+    this.floorMat=new THREE.MeshBasicMaterial({color:0x002a1a,transparent:true,opacity:0.03,depthWrite:false});
+    this.floor=new THREE.Mesh(new THREE.PlaneGeometry(80,80),this.floorMat);
+    this.floor.rotation.x=-Math.PI/2;this.floor.position.y=-14;this.scene.add(this.floor);
+  }
+  update(f,elapsed){
+    const show=document.getElementById('chk-godrays').checked;
+    const dynV=f.dynamics*sens.dyn*sens.master,brV=f.brightness*sens.master;
+    for(const r of this.godRays){r.mat.uniforms.uT.value=elapsed;r.mesh.position.x=r.bx+Math.sin(elapsed*0.12+r.ph)*2;r.mesh.visible=show;r.mat.uniforms.uOp.value=0.25+brV*0.4+dynV*0.3;}
+    const p=this._ambPos,n=p.length/3;
+    for(let i=0;i<n;i++){p[i*3+1]-=0.002;p[i*3]+=Math.sin(elapsed*0.08+i*0.1)*0.0015;p[i*3+2]+=Math.cos(elapsed*0.06+i*0.12)*0.0015;if(p[i*3+1]<-18)p[i*3+1]=18;}
+    this.ambPts.geometry.attributes.position.needsUpdate=true;this.ambMat.opacity=0.08+dynV*0.12;
+  }
+  updateScheme(){const sc=SCHEMES[scheme];for(const r of this.godRays)r.mat.uniforms.uCol.value.set(sc.ray);
+    const col=this.ambPts.geometry.attributes.color.array,n=col.length/3,ac=new THREE.Color(sc.ambient);
+    for(let i=0;i<n;i++){const v=0.4+Math.random()*0.6;col[i*3]=ac.r*v;col[i*3+1]=ac.g*v;col[i*3+2]=ac.b*v;}
+    this.ambPts.geometry.attributes.color.needsUpdate=true;
+  }
+}
+
+/* ================================================================
+   MIDI
+   ================================================================ */
+class MIDICtrl{
+  constructor(){this.active=false;this.vel=0;this.pitch=60;this._nw=[];this._init();}
+  async _init(){if(!navigator.requestMIDIAccess)return;try{const m=await navigator.requestMIDIAccess();m.inputs.forEach(i=>{i.onmidimessage=e=>this._h(e);});this.active=true;}catch(e){}}
+  _h(m){const[s,d1,d2]=m.data;if((s>>4)===9&&d2>0){this.vel=d2/127;this.pitch=d1;this._nw.push(performance.now());}}
+  get(ts){this._nw=this._nw.filter(t=>t>ts-4000);return{dynamics:this.vel,density:Math.min(1,this._nw.length/16),brightness:Math.min(1,(this.pitch-36)/60)};}
+}
+
+/* ================================================================
+   APP
+   ================================================================ */
+class App{
+  constructor(){
+    this.clock=new THREE.Clock();this.shoals=[];this.whales=[];this.env=null;
+    this.audio=new AudioAnalyzer();this.midi=new MIDICtrl();this.audioOn=false;
+    this._fpF=0;this._fpT=0;
+    this.vuCv=document.getElementById('vu-canvas');this.vuCx=this.vuCv.getContext('2d');
+    this._initRenderer();this._initScene();this._initPost();this._initUI();this._build();this._animate();
+    window.addEventListener('resize',()=>this._resize());
+  }
+  _initRenderer(){
+    this.renderer=new THREE.WebGLRenderer({antialias:true});
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    this.renderer.setSize(window.innerWidth,window.innerHeight);
+    this.renderer.outputColorSpace=THREE.SRGBColorSpace;
+    this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.1;
+    const c=this.renderer.domElement;c.id='main-canvas';document.body.prepend(c);
+  }
+  _initScene(){
+    this.scene=new THREE.Scene();const sc=SCHEMES[scheme];
+    this.scene.background=new THREE.Color(sc.bg);this.scene.fog=new THREE.Fog(new THREE.Color(sc.fog),5,48);
+    this.camera=new THREE.PerspectiveCamera(55,window.innerWidth/window.innerHeight,0.1,120);
+    this.camera.position.set(0,2,20);
+    this.scene.add(new THREE.AmbientLight(0x003355,0.3));
+    this.sunLight=new THREE.DirectionalLight(0xaaddff,1.0);this.sunLight.position.set(5,30,10);this.scene.add(this.sunLight);
+    this.scene.add(new THREE.HemisphereLight(0x446688,0x000d1a,0.35));
+    // Depth-gradient fill light from below (subtle)
+    const bl=new THREE.PointLight(0x0a2233,0.2,30);bl.position.set(0,-12,0);this.scene.add(bl);
+    this.controls=new OrbitControls(this.camera,this.renderer.domElement);
+    this.controls.enableDamping=true;this.controls.dampingFactor=0.04;
+    this.controls.autoRotate=true;this.controls.autoRotateSpeed=0.15;
+    this.controls.minDistance=5;this.controls.maxDistance=40;
+    this.controls.minPolarAngle=Math.PI/5;this.controls.maxPolarAngle=Math.PI*4/5;this.controls.enablePan=false;
+  }
+  _initPost(){
+    this.composer=new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene,this.camera));
+    this.bloomPass=new UnrealBloomPass(new THREE.Vector2(window.innerWidth,window.innerHeight),vis.bloomStr,0.7,vis.bloomThresh);
+    this.composer.addPass(this.bloomPass);
+    this.composer.addPass(new ShaderPass(VignetteShader));
+    this.composer.addPass(new OutputPass());
+  }
+  _build(){
+    this.env=new Environment(this.scene);
+    this._rebuildShoals(2,500);this._rebuildWhales(2);
+  }
+  _rebuildShoals(n,c){for(const s of this.shoals)s.dispose();this.shoals=[];for(let i=0;i<n;i++)this.shoals.push(new Shoal(c,i,this.scene));}
+  _rebuildWhales(n){
+    for(const w of this.whales)w.dispose();this.whales=[];
+    const cfgs=[
+      {scale:3.2,pathRadius:20,pathHeight:3,pathSpeed:0.035,phaseOffset:0,yOffset:1,seed:1,fieldR:9,strength:2,breathPeriod:9},
+      {scale:2.2,pathRadius:14,pathHeight:2,pathSpeed:0.05,phaseOffset:Math.PI*0.7,yOffset:-2,seed:2,fieldR:7,strength:1.8,breathPeriod:7},
+      {scale:1.6,pathRadius:11,pathHeight:1.5,pathSpeed:0.065,phaseOffset:Math.PI*1.4,yOffset:-4,seed:3,fieldR:5,strength:1.5,breathPeriod:6},
+    ];
+    for(let i=0;i<n&&i<cfgs.length;i++)this.whales.push(new Whale(cfgs[i],this.scene));
+  }
+  _initUI(){
+    const self=this;
+    // Section toggles
+    document.querySelectorAll('[data-toggle]').forEach(el=>{el.addEventListener('click',()=>{el.parentElement.classList.toggle('collapsed');});});
+    // Audio source
+    document.querySelectorAll('input[name="source"]').forEach(r=>{r.addEventListener('change',()=>{document.getElementById('file-upload-area').style.display=r.value==='file'&&r.checked?'block':'none';});});
+    document.getElementById('audio-file').addEventListener('change',e=>{if(e.target.files.length){const f=e.target.files[0];document.getElementById('file-name').textContent=f.name;if(self.audio.audioEl)self.audio.audioEl.pause();const el=new Audio();el.src=URL.createObjectURL(f);el.crossOrigin='anonymous';el.loop=true;self.audio.setAudioElement(el);}});
+    document.getElementById('btn-start').addEventListener('click',async()=>{
+      const btn=document.getElementById('btn-start');
+      if(self.audioOn){self.audio.stop();self.audioOn=false;btn.textContent='Start Audio';btn.classList.remove('active');document.getElementById('vu-status').textContent='No Input';document.getElementById('vu-db').textContent='-∞ dB';document.getElementById('vu-fill').style.width='0%';return;}
+      const src=document.querySelector('input[name="source"]:checked').value;
+      if(src==='file'&&!self.audio.audioEl){showStatus('Select an audio file first',true);return;}
+      btn.textContent='...';btn.disabled=true;const ok=await self.audio.init(src);btn.disabled=false;
+      if(ok){self.audioOn=true;btn.textContent='Stop Audio';btn.classList.add('active');document.getElementById('instructions').style.opacity='0';document.getElementById('vu-status').textContent='Listening';showStatus('Audio — '+src);}
+      else btn.textContent='Start Audio';
+    });
+    // Sens sliders
+    const wire=(id,vid,cb)=>{const sl=document.getElementById(id),vl=document.getElementById(vid);sl.addEventListener('input',()=>{vl.textContent=sl.value;cb(parseFloat(sl.value));});};
+    wire('sl-master','val-master',v=>{sens.master=v;});
+    wire('sl-smooth','val-smooth',v=>{sens.smooth=v;document.getElementById('val-smooth').textContent=v+'s';});
+    wire('sl-s-tempo','val-s-tempo',v=>{sens.tempo=v;});
+    wire('sl-s-dyn','val-s-dyn',v=>{sens.dyn=v;});
+    wire('sl-s-flux','val-s-flux',v=>{sens.flux=v;});
+    wire('sl-s-dens','val-s-dens',v=>{sens.dens=v;});
+    // Sens presets
+    document.querySelectorAll('[data-preset]').forEach(btn=>{btn.addEventListener('click',()=>{
+      document.querySelectorAll('[data-preset]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+      const p=SENS_PRESETS[btn.dataset.preset];
+      sens.tempo=p.tempo;sens.dyn=p.dyn;sens.flux=p.flux;sens.dens=p.dens;
+      document.getElementById('sl-s-tempo').value=p.tempo;document.getElementById('val-s-tempo').textContent=p.tempo;
+      document.getElementById('sl-s-dyn').value=p.dyn;document.getElementById('val-s-dyn').textContent=p.dyn;
+      document.getElementById('sl-s-flux').value=p.flux;document.getElementById('val-s-flux').textContent=p.flux;
+      document.getElementById('sl-s-dens').value=p.dens;document.getElementById('val-s-dens').textContent=p.dens;
+    });});
+    // Flock presets
+    document.querySelectorAll('[data-flock]').forEach(btn=>{btn.addEventListener('click',()=>{
+      document.querySelectorAll('[data-flock]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+      flock={...FLOCK_PRESETS[btn.dataset.flock]};
+    });});
+    // Shoal/whale controls
+    wire('sl-shoals','val-shoals',v=>self._rebuildShoals(v,parseInt(document.getElementById('sl-fish').value)));
+    wire('sl-fish','val-fish',v=>self._rebuildShoals(parseInt(document.getElementById('sl-shoals').value),v));
+    wire('sl-whales','val-whales',v=>self._rebuildWhales(v));
+    wire('sl-whale-str','val-whale-str',v=>{whaleInfluence=v;});
+    // Visual
+    document.getElementById('chk-bloom').addEventListener('change',e=>{vis.bloom=e.target.checked;self.bloomPass.strength=vis.bloom?vis.bloomStr:0;});
+    wire('sl-bloom','val-bloom',v=>{vis.bloomStr=v;if(vis.bloom)self.bloomPass.strength=v;});
+    wire('sl-bloom-t','val-bloom-t',v=>{vis.bloomThresh=v;self.bloomPass.threshold=v;});
+    wire('sl-bright','val-bright',v=>{vis.bright=v;});
+    document.getElementById('sel-color').addEventListener('change',e=>{scheme=e.target.value;self._applyScheme();});
+    document.getElementById('chk-autorotate').addEventListener('change',e=>{self.controls.autoRotate=e.target.checked;});
+  }
+  _applyScheme(){
+    const sc=SCHEMES[scheme];this.scene.background.set(sc.bg);this.scene.fog.color.set(sc.fog);
+    for(const s of this.shoals)s.updateColors();for(const w of this.whales)w.updateScheme();this.env.updateScheme();
+  }
+  _updateMetrics(f){
+    const set=(id,v,p)=>{document.getElementById('mv-'+id).textContent=v;document.getElementById('mf-'+id).style.width=Math.min(100,p)+'%';};
+    set('tempo',Math.round(f.tempo)+' BPM',(f.tempo/200)*100);
+    set('bright',f.brightness.toFixed(2),f.brightness*100);set('dynamics',f.dynamics.toFixed(2),f.dynamics*100);
+    set('turb',f.turbulence.toFixed(2),f.turbulence*100);set('density',f.density.toFixed(2),f.density*100);
+    set('complex',f.complexity.toFixed(2),f.complexity*100);
+    // Show dominant behaviour from first shoal
+    if(this.shoals.length)document.getElementById('behav-state').innerHTML='Behaviour: <strong>'+this.shoals[0].behaviour.dominantLabel+'</strong>';
+  }
+  _updateVU(){
+    this.audio.drawVU(this.vuCx,this.vuCv.width,this.vuCv.height);
+    if(this.audioOn&&this.audio.running){
+      const dbN=Math.max(0,Math.min(1,(this.audio.rawDB+60)/60));
+      document.getElementById('vu-fill').style.width=(dbN*100)+'%';
+      const db=this.audio.rawDB;document.getElementById('vu-db').textContent=db>-80?db.toFixed(1)+' dB':'-∞ dB';
+      const st=document.getElementById('vu-status');
+      if(db>-12){st.textContent='LOUD';st.style.color='#cc5544';}
+      else if(db>-30){st.textContent='Active';st.style.color='#44cc77';}
+      else if(db>-55){st.textContent='Quiet';st.style.color='#448866';}
+      else{st.textContent='Silent';st.style.color='#445555';}
+    }
+  }
+  _animate(){
+    requestAnimationFrame(()=>this._animate());
+    const dt=Math.min(this.clock.getDelta(),0.05),elapsed=this.clock.getElapsedTime(),now=performance.now();
+    this._fpF++;if(now-this._fpT>500){document.getElementById('fps').textContent=Math.round(this._fpF/((now-this._fpT)/1000))+' fps';this._fpF=0;this._fpT=now;}
+    if(this.audioOn)this.audio.update(now);
+    let f=this.audio.getFeatures();
+    if(this.midi.active){const mo=this.midi.get(now);if(mo.dynamics>0.01)f.dynamics=Math.max(f.dynamics,mo.dynamics);if(mo.density>0.01)f.density=Math.max(f.density,mo.density);}
+    if(!this.audioOn){
+      f={tempo:82+Math.sin(elapsed*0.08)*8,brightness:0.25+Math.sin(elapsed*0.12)*0.06,dynamics:0.12+Math.sin(elapsed*0.15)*0.03,
+        turbulence:0.04+Math.sin(elapsed*0.1)*0.015,density:0.4+Math.sin(elapsed*0.06)*0.06,complexity:0.18+Math.sin(elapsed*0.14)*0.05};
+    }
+    const whalesEnabled=document.getElementById('chk-whales').checked;
+    const activeWhales=whalesEnabled?this.whales:[];
+    for(const w of this.whales){w.group.visible=whalesEnabled;if(whalesEnabled)w.update(f,dt,elapsed);}
+    for(const s of this.shoals)s.update(f,activeWhales,dt,elapsed);
+    this.env.update(f,elapsed);
+    // Dynamic bloom
+    if(vis.bloom&&this.audioOn){const dB=f.dynamics*sens.dyn*sens.master;this.bloomPass.strength=vis.bloomStr+dB*0.3;}
+    // Camera gentle bob
+    this.camera.position.y+=Math.sin(elapsed*0.25)*0.0008;
+    this.sunLight.intensity=1.0+Math.sin(elapsed*0.35)*0.08;
+    this.controls.update();this._updateMetrics(f);this._updateVU();this.composer.render();
+  }
+  _resize(){const w=window.innerWidth,h=window.innerHeight;this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.renderer.setSize(w,h);this.composer.setSize(w,h);this.bloomPass.resolution.set(w,h);}
+}
+
+const app=new App();
 </script>
 </body>
 </html>
