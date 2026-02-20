@@ -488,19 +488,61 @@ class AudioAnalyzer {
    ================================================================ */
 function createFishGeo(){
   const p=new Float32Array([
-    0,0,0.065,        // 0 nose
-    0.016,0,0.005,    // 1 right
-    -0.016,0,0.005,   // 2 left
-    0,0.01,-0.005,    // 3 top
-    0,-0.01,-0.005,   // 4 bottom
-    0,0,-0.045,       // 5 tail base
-    0,0.009,-0.065,   // 6 tail top
-    0,-0.009,-0.065,  // 7 tail bottom
+    0,0,0.5,          // 0 nose
+    0.12,0,0.04,      // 1 right
+    -0.12,0,0.04,     // 2 left
+    0,0.08,-0.02,     // 3 top
+    0,-0.08,-0.02,    // 4 bottom
+    0,0,-0.34,        // 5 tail base
+    0,0.07,-0.52,     // 6 tail top
+    0,-0.07,-0.52,    // 7 tail bottom
   ]);
   const idx=new Uint16Array([0,1,3, 0,3,2, 0,2,4, 0,4,1, 1,5,3, 3,5,2, 2,5,4, 4,5,1, 5,6,7]);
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.BufferAttribute(p,3));
   g.setIndex(new THREE.BufferAttribute(idx,1));
+  g.computeVertexNormals();
+  return g;
+}
+
+function createWhaleGeo(){
+  const verts=[],idx=[];
+  const profile=[
+    [2.0, 0.08, 0.12],
+    [1.6, 0.30, 0.35],
+    [1.0, 0.48, 0.44],
+    [0.3, 0.55, 0.50],
+    [-0.4, 0.50, 0.46],
+    [-1.0, 0.36, 0.34],
+    [-1.5, 0.16, 0.18],
+    [-1.9, 0.06, 0.08],
+  ];
+  const R=8;
+  for(const[z,rx,ry] of profile){
+    for(let i=0;i<R;i++){const a=(i/R)*Math.PI*2;verts.push(Math.cos(a)*rx,Math.sin(a)*ry,z);}
+  }
+  for(let s=0;s<profile.length-1;s++){
+    for(let i=0;i<R;i++){const a=s*R+i,b=s*R+(i+1)%R,c=(s+1)*R+i,d=(s+1)*R+(i+1)%R;idx.push(a,c,b,b,c,d);}
+  }
+  const nI=verts.length/3;verts.push(0,0.04,2.15);
+  for(let i=0;i<R;i++)idx.push(nI,i,(i+1)%R);
+  const lr=(profile.length-1)*R,tI=verts.length/3;verts.push(0,0,-2.0);
+  for(let i=0;i<R;i++)idx.push(tI,lr+(i+1)%R,lr+i);
+  const fI=verts.length/3;
+  verts.push(0,0,-2.0, -0.65,0.02,-2.4, -0.15,0.02,-2.55, 0.15,0.02,-2.55, 0.65,0.02,-2.4);
+  idx.push(fI,fI+1,fI+2, fI,fI+2,fI+3, fI,fI+3,fI+4);
+  idx.push(fI,fI+2,fI+1, fI,fI+3,fI+2, fI,fI+4,fI+3);
+  const pI=verts.length/3;
+  verts.push(-0.48,-0.1,0.8, -0.48,-0.15,0.2, -0.9,-0.35,0.35);
+  idx.push(pI,pI+1,pI+2, pI,pI+2,pI+1);
+  verts.push(0.48,-0.1,0.8, 0.48,-0.15,0.2, 0.9,-0.35,0.35);
+  idx.push(pI+3,pI+5,pI+4, pI+3,pI+4,pI+5);
+  const dI=verts.length/3;
+  verts.push(0,0.48,-0.3, 0,0.48,-0.7, 0,0.64,-0.55);
+  idx.push(dI,dI+2,dI+1, dI,dI+1,dI+2);
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  g.setIndex(idx);
   g.computeVertexNormals();
   return g;
 }
@@ -522,16 +564,16 @@ class Shoal{
     this.scales=new Float32Array(count);this.phases=new Float32Array(count);
     this.behaviour=new BehaviourState();
     this.centerX=0;this.centerY=0;this.centerZ=0;
-    this.grid=new Grid(3.5);this._nb=[];
+    this.grid=new Grid(6);this._nb=[];
     this.baseColor=new THREE.Color(SCHEMES[scheme].fish[ci%5]);
 
-    const cx=(Math.random()-0.5)*14,cy=(Math.random()-0.5)*6,cz=(Math.random()-0.5)*14;
     for(let i=0;i<count;i++){
-      this.px[i]=cx+(Math.random()-0.5)*8;this.py[i]=cy+(Math.random()-0.5)*6;this.pz[i]=cz+(Math.random()-0.5)*8;
-      const a=Math.random()*Math.PI*2,sp=0.4+Math.random()*0.4;
-      this.vx[i]=Math.cos(a)*sp;this.vy[i]=(Math.random()-0.5)*0.3;this.vz[i]=Math.sin(a)*sp;
+      const a=Math.random()*Math.PI*2,r=6+Math.random()*10;
+      this.px[i]=Math.cos(a)*r;this.py[i]=(Math.random()-0.5)*8;this.pz[i]=Math.sin(a)*r;
+      const va=a+Math.PI*0.5+(Math.random()-0.5)*0.6,sp=0.5+Math.random()*0.5;
+      this.vx[i]=Math.cos(va)*sp;this.vy[i]=(Math.random()-0.5)*0.3;this.vz[i]=Math.sin(va)*sp;
       this.pvx[i]=this.vx[i];this.pvy[i]=this.vy[i];this.pvz[i]=this.vz[i];
-      this.scales[i]=0.8+Math.random()*0.5;
+      this.scales[i]=1.2+Math.random()*1.3;
       this.phases[i]=Math.random()*Math.PI*2;
     }
     this._buildMesh(count);
@@ -565,7 +607,7 @@ class Shoal{
     const tempoSpd=0.4+(ef.tempo/100)*0.5*sens.tempo*sm;
     const maxSpd=2.2*tempoSpd*bm.speedMult;
     const maxForce=0.7*Math.max(0.3,tempoSpd)*bm.speedMult;
-    const perc=3.5*(1+ef.dynamics*1.5);
+    const perc=5*(1+ef.dynamics*1.2);
     const sepW=flock.sep*bm.separationMult;
     const aliW=flock.ali*bm.alignmentMult;
     const cohW=flock.coh*bm.cohesionMult;
@@ -586,8 +628,8 @@ class Shoal{
     this.grid.clear();
     for(let i=0;i<NC;i++)this.grid.add(this.px[i],this.py[i],this.pz[i],i);
 
-    const percSq=perc*perc,sepD=perc*0.4,sepSq=sepD*sepD;
-    const bound=22,margin=4,bStr=1.0;
+    const percSq=perc*perc,sepD=perc*0.5,sepSq=sepD*sepD;
+    const bound=28,margin=5,bStr=0.8;
 
     for(let i=0;i<NC;i++){
       const bx=this.px[i],by=this.py[i],bz=this.pz[i];
@@ -638,6 +680,14 @@ class Shoal{
         fz+=(dx/tm2)*bm.circlingForce*maxSpd*0.8;
       }
 
+      // Swirl around viewer: tangential orbit + soft radial pull
+      const dx0=bx,dz0=bz,d0=Math.sqrt(dx0*dx0+dz0*dz0)||1;
+      const swirlStr=0.45*maxSpd;
+      fx+=(-dz0/d0)*swirlStr;fz+=(dx0/d0)*swirlStr;
+      const preferR=11,rDiff=(d0-preferR)*0.06;
+      fx-=(dx0/d0)*rDiff;fz-=(dz0/d0)*rDiff;
+      fy-=by*0.02;
+
       // Turbulence + current
       const cTime=elapsed*0.03;
       const currX=noise3D(bx*0.04,by*0.04,cTime)*0.3;
@@ -648,7 +698,7 @@ class Shoal{
 
       // Boundaries
       if(bx>bound-margin)fx-=(bx-bound+margin)*bStr;if(bx<-bound+margin)fx-=(bx+bound-margin)*bStr;
-      if(by>bound*0.55-margin)fy-=(by-bound*0.55+margin)*bStr;if(by<-bound*0.55+margin)fy-=(by+bound*0.55-margin)*bStr;
+      if(by>bound*0.45-margin)fy-=(by-bound*0.45+margin)*bStr;if(by<-bound*0.45+margin)fy-=(by+bound*0.45-margin)*bStr;
       if(bz>bound-margin)fz-=(bz-bound+margin)*bStr;if(bz<-bound+margin)fz-=(bz+bound-margin)*bStr;
 
       // Clamp
@@ -705,8 +755,8 @@ class Shoal{
       const wobble=Math.sin(elapsed*3+this.phases[i])*0.04*(1-Math.min(1,spd*0.5));
       _bq.setFromAxisAngle(_up,wobble);_q.premultiply(_bq);
 
-      const sc=this.scales[i]*(0.9+spd*0.15);
-      _sc.set(sc,sc,sc*1.15); // slightly elongated
+      const sc=this.scales[i]*(0.85+spd*0.2);
+      _sc.set(sc,sc*0.9,sc*1.1);
       _m4.compose(_pos,_q,_sc);
       _m4.toArray(matrices,i*16);
 
@@ -728,57 +778,81 @@ class Shoal{
 class Whale{
   constructor(cfg,scene){
     this.scene=scene;this.position=new THREE.Vector3();this.velocity=new THREE.Vector3();
-    this.scale=cfg.scale||3;
-    this.baseFieldR=(cfg.fieldR||8)*this.scale*0.4;this.fieldR=this.baseFieldR;
-    this.strength=cfg.strength||2;
-    this.breathPeriod=cfg.breathPeriod||8+Math.random()*4;this.breathPhase=Math.random()*Math.PI*2;
-    this.pathSpeed=cfg.pathSpeed||0.03;this.pathProgress=cfg.phaseOffset||0;
+    this.scale=cfg.scale||1;
+    this.baseFieldR=(cfg.fieldR||6)*this.scale*0.6;this.fieldR=this.baseFieldR;
+    this.strength=cfg.strength||1.5;
+    this.breathPeriod=cfg.breathPeriod||10+Math.random()*6;this.breathPhase=Math.random()*Math.PI*2;
+    this.pathSpeed=cfg.pathSpeed||0.02;this.pathProgress=cfg.phaseOffset||0;
+    this._prevYaw=0;this._tgtQ=new THREE.Quaternion();this._tmpQ=new THREE.Quaternion();
+    this._tmpV=new THREE.Vector3();this._tmpV2=new THREE.Vector3();this._tmpM=new THREE.Matrix4();
 
-    const pts=[];const nP=8;const r=cfg.pathRadius||18;const rV=r*0.35;const hV=cfg.pathHeight||3;const yO=cfg.yOffset||0;
+    const pts=[];const nP=10;const r=cfg.pathRadius||16;const rV=r*0.3;const hV=cfg.pathHeight||4;const yO=cfg.yOffset||0;
     for(let i=0;i<nP;i++){const t=(i/nP)*Math.PI*2;const rad=r+Math.sin(t*2+cfg.seed*5)*rV;
-      pts.push(new THREE.Vector3(Math.cos(t)*rad,yO+Math.sin(t*3+cfg.seed*3)*hV,Math.sin(t)*rad));}
+      pts.push(new THREE.Vector3(Math.cos(t)*rad,yO+Math.sin(t*2.3+cfg.seed*3)*hV,Math.sin(t)*rad));}
     this.path=new THREE.CatmullRomCurve3(pts,true,'centripetal',0.5);
     this.position.copy(this.path.getPointAt(0));
     this._createMesh();
   }
   _createMesh(){
     const sc=SCHEMES[scheme];
-    // Outer glow — large, transparent, volumetric
-    const gg=new THREE.IcosahedronGeometry(1,4);
+    const whaleGeo=createWhaleGeo();
+    this.bodyMat=new THREE.MeshLambertMaterial({color:sc.whaleCore,transparent:true,opacity:0.4,side:THREE.DoubleSide,depthWrite:false});
+    this.bodyMesh=new THREE.Mesh(whaleGeo,this.bodyMat);
+    this.bodyMesh.scale.setScalar(this.scale);
+    const gg=new THREE.IcosahedronGeometry(1,3);
     this.glowMat=new THREE.ShaderMaterial({vertexShader:WhaleGlowV,fragmentShader:WhaleGlowF,
-      uniforms:{uCol:{value:new THREE.Color(sc.whaleGlow)},uStr:{value:0.4},uT:{value:0}},
+      uniforms:{uCol:{value:new THREE.Color(sc.whaleGlow)},uStr:{value:0.25},uT:{value:0}},
       transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.FrontSide});
     this.glowMesh=new THREE.Mesh(gg,this.glowMat);
-    this.glowMesh.scale.setScalar(this.scale*2.2);
-    // Inner subtle core
-    const cg=new THREE.IcosahedronGeometry(1,3);
-    this.coreMat=new THREE.MeshBasicMaterial({color:sc.whaleCore,transparent:true,opacity:0.1,depthWrite:false});
-    this.coreMesh=new THREE.Mesh(cg,this.coreMat);
-    this.coreMesh.scale.setScalar(this.scale*0.6);
-    this.group=new THREE.Group();this.group.add(this.glowMesh);this.group.add(this.coreMesh);
+    this.glowMesh.scale.set(this.scale*1.2,this.scale*0.9,this.scale*2.2);
+    this.group=new THREE.Group();this.group.add(this.bodyMesh);this.group.add(this.glowMesh);
     this.scene.add(this.group);
   }
   update(f,dt,elapsed){
     const dynV=f.dynamics*sens.dyn*sens.master;
-    const tempoF=0.3+(f.tempo/100)*0.6*sens.tempo*sens.master;
+    const tempoF=0.3+(f.tempo/100)*0.5*sens.tempo*sens.master;
     this.pathProgress+=this.pathSpeed*dt*tempoF;if(this.pathProgress>1)this.pathProgress-=1;
     const tgt=this.path.getPointAt(this.pathProgress%1);
     const prev=this.position.clone();
-    this.position.lerp(tgt,0.015+dt*0.4);
+    this.position.lerp(tgt,0.012+dt*0.25);
     this.velocity.subVectors(this.position,prev);
     const breathV=Math.sin(elapsed*(Math.PI*2/this.breathPeriod)+this.breathPhase);
-    this.strength=1.5+dynV*4;this.fieldR=this.baseFieldR*(1+dynV*0.4);
+    this.strength=1.2+dynV*3;this.fieldR=this.baseFieldR*(1+dynV*0.35);
     this.group.position.copy(this.position);
-    if(this.velocity.lengthSq()>0.00001){const d=this.velocity.clone().normalize();this.group.rotation.y+=(Math.atan2(d.x,d.z)-this.group.rotation.y)*0.015;}
-    const bs=1+breathV*0.08;const ds=1+dynV*0.3;
-    this.glowMesh.scale.setScalar(this.scale*(1.8+dynV*0.8)*bs);
-    this.coreMesh.scale.setScalar(this.scale*0.6*bs*ds);
-    this.glowMat.uniforms.uStr.value=0.2+dynV*1.2+breathV*0.1;
+
+    // Quaternion orientation: smooth look-along-velocity with undulation and banking
+    const vel=this.velocity;
+    if(vel.lengthSq()>0.000001){
+      this._tmpV.copy(vel).normalize();
+      this._tmpV2.copy(this.position).add(this._tmpV);
+      const upRef=Math.abs(this._tmpV.y)>0.92?_up2:_up;
+      this._tmpM.lookAt(this.position,this._tmpV2,upRef);
+      this._tgtQ.setFromRotationMatrix(this._tmpM);
+      // Tail undulation: gentle pitch oscillation
+      const tailFreq=0.6+tempoF*0.4;
+      const tailAmp=0.04+dynV*0.025;
+      this._tmpQ.setFromAxisAngle(_up2,Math.sin(elapsed*tailFreq*Math.PI*2+this.breathPhase)*tailAmp);
+      this._tgtQ.multiply(this._tmpQ);
+      // Bank into turns
+      const curYaw=Math.atan2(vel.x,vel.z);
+      let yawDelta=curYaw-this._prevYaw;
+      if(yawDelta>Math.PI)yawDelta-=Math.PI*2;if(yawDelta<-Math.PI)yawDelta+=Math.PI*2;
+      const bankAng=Math.max(-0.2,Math.min(0.2,-yawDelta*4));
+      this._tmpQ.setFromAxisAngle(this._tmpV,bankAng);
+      this._tgtQ.multiply(this._tmpQ);
+      this._prevYaw=curYaw;
+      this.group.quaternion.slerp(this._tgtQ,0.018);
+    }
+
+    const bs=1+breathV*0.06;const ds=1+dynV*0.15;
+    this.bodyMesh.scale.setScalar(this.scale*bs*ds);
+    this.glowMesh.scale.set(this.scale*1.2*bs,this.scale*0.9*bs,this.scale*2.2*bs);
+    this.glowMat.uniforms.uStr.value=0.15+dynV*0.7+breathV*0.08;
     this.glowMat.uniforms.uT.value=elapsed;
-    this.coreMat.opacity=0.06+dynV*0.15;
+    this.bodyMat.opacity=0.3+dynV*0.2+breathV*0.05;
   }
-  updateScheme(){const sc=SCHEMES[scheme];this.glowMat.uniforms.uCol.value.set(sc.whaleGlow);this.coreMat.color.set(sc.whaleCore);}
-  dispose(){this.scene.remove(this.group);this.glowMesh.geometry.dispose();this.glowMat.dispose();this.coreMesh.geometry.dispose();this.coreMat.dispose();}
+  updateScheme(){const sc=SCHEMES[scheme];this.glowMat.uniforms.uCol.value.set(sc.whaleGlow);this.bodyMat.color.set(sc.whaleCore);}
+  dispose(){this.scene.remove(this.group);this.bodyMesh.geometry.dispose();this.bodyMat.dispose();this.glowMesh.geometry.dispose();this.glowMat.dispose();}
 }
 
 /* ================================================================
@@ -868,9 +942,9 @@ class App{
   }
   _initScene(){
     this.scene=new THREE.Scene();const sc=SCHEMES[scheme];
-    this.scene.background=new THREE.Color(sc.bg);this.scene.fog=new THREE.Fog(new THREE.Color(sc.fog),5,48);
-    this.camera=new THREE.PerspectiveCamera(55,window.innerWidth/window.innerHeight,0.1,120);
-    this.camera.position.set(0,2,20);
+    this.scene.background=new THREE.Color(sc.bg);this.scene.fog=new THREE.Fog(new THREE.Color(sc.fog),8,55);
+    this.camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,120);
+    this.camera.position.set(0,1,8);
     this.scene.add(new THREE.AmbientLight(0x003355,0.3));
     this.sunLight=new THREE.DirectionalLight(0xaaddff,1.0);this.sunLight.position.set(5,30,10);this.scene.add(this.sunLight);
     this.scene.add(new THREE.HemisphereLight(0x446688,0x000d1a,0.35));
@@ -879,7 +953,7 @@ class App{
     this.controls=new OrbitControls(this.camera,this.renderer.domElement);
     this.controls.enableDamping=true;this.controls.dampingFactor=0.04;
     this.controls.autoRotate=true;this.controls.autoRotateSpeed=0.15;
-    this.controls.minDistance=5;this.controls.maxDistance=40;
+    this.controls.minDistance=2;this.controls.maxDistance=35;
     this.controls.minPolarAngle=Math.PI/5;this.controls.maxPolarAngle=Math.PI*4/5;this.controls.enablePan=false;
   }
   _initPost(){
@@ -898,9 +972,9 @@ class App{
   _rebuildWhales(n){
     for(const w of this.whales)w.dispose();this.whales=[];
     const cfgs=[
-      {scale:3.2,pathRadius:20,pathHeight:3,pathSpeed:0.035,phaseOffset:0,yOffset:1,seed:1,fieldR:9,strength:2,breathPeriod:9},
-      {scale:2.2,pathRadius:14,pathHeight:2,pathSpeed:0.05,phaseOffset:Math.PI*0.7,yOffset:-2,seed:2,fieldR:7,strength:1.8,breathPeriod:7},
-      {scale:1.6,pathRadius:11,pathHeight:1.5,pathSpeed:0.065,phaseOffset:Math.PI*1.4,yOffset:-4,seed:3,fieldR:5,strength:1.5,breathPeriod:6},
+      {scale:1.1,pathRadius:18,pathHeight:4,pathSpeed:0.018,phaseOffset:0,yOffset:-1,seed:1,fieldR:7,strength:1.8,breathPeriod:12},
+      {scale:0.85,pathRadius:14,pathHeight:3,pathSpeed:0.024,phaseOffset:Math.PI*0.7,yOffset:-3,seed:2,fieldR:5.5,strength:1.5,breathPeriod:10},
+      {scale:0.65,pathRadius:22,pathHeight:5,pathSpeed:0.015,phaseOffset:Math.PI*1.4,yOffset:2,seed:3,fieldR:4,strength:1.2,breathPeriod:14},
     ];
     for(let i=0;i<n&&i<cfgs.length;i++)this.whales.push(new Whale(cfgs[i],this.scene));
   }
